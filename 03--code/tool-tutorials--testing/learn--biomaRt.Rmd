@@ -1,0 +1,259 @@
+---
+title: "Learn: biomaRt"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+<!-- params: -->
+
+Workflow and examples adapted from "The biomaRt users guide" (Durnick, 2019).
+
+# Setup
+
+Load required packages:
+
+```{r}
+library("biomaRt")
+```
+
+# Selecting a BioMart database and dataset
+
+A first step is to check which BioMart web services are available.
+
+```{r}
+listMarts()
+```
+
+The `useMart()` function can now be used to connect to a specified BioMart database, which must be a valid name given by `listMarts()`.
+
+- ISSUE: I don't understand because "ensembl" is not specifically in the output above.
+
+```{r}
+ensembl=useMart("ENSEMBL_MART_ENSEMBL")
+str(ensembl)
+```
+
+Look at which datasets are available:
+
+```{r}
+datasets = listDatasets(ensembl)
+head(datasets, n = 40)
+```
+
+Select a dataset to use by updating the Mart object
+
+```{r}
+ensembl = useDataset("hsapiens_gene_ensembl", mart = ensembl)
+str(ensembl)
+# Can select a BioMart database and dataset in one step:
+	# ensembl = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+```
+
+# How to build a biomaRt query
+
+The `getBM()` function is the main biomaRt query function and has 4 main arguments: 
+
+- ***Filters***: define a restriction on the query (e.g. only chrX)
+- ***Attributes***: define the values we are interested in to retrieve (e.g. only want gene symbols and chr coords)
+- ***Values***: an input vector of values for the filters that you supply
+- ***Mart Object***: an object of class `Mart`
+
+```{r}
+# Filters
+filters = listFilters(ensembl)
+head(filters, n = 40)
+
+# Attributes
+attributes = listAttributes(ensembl)
+head(attributes, n = 40)
+```
+
+Since we have selected a BioMart database and dataset, attributes, filters, and values, we can build a biomaRt query. Example: From Affymetrics IDs for u133plus2 platform, retrieve the corresponding EntrezGene IDs using Ensembl mappings.
+
+```{r}
+affyids=c("202763_at","209310_s_at","207500_at")
+getBM(attributes = c('affy_hg_u133_plus_2', 'entrezgene_id'), 
+	  filters = 'affy_hg_u133_plus_2', 
+	  values = affyids, 
+	  mart = ensembl)
+```
+
+## Searching for datasets, filters, and attributes
+
+`listDatasets()`, `listAttributes()`, and `listFilters()` can be unwieldy as they display all options, so you can use `searchDatasets()`, `searchAttributes()`, and `searchFilters()`.
+```{r}
+searchDatasets(mart = ensembl, pattern = "hsapiens")
+
+searchAttributes(mart = ensembl, pattern = "hgnc")
+
+searchFilters(mart = ensembl, pattern = "ensembl.*id")
+```
+
+## Using predefined filter values
+
+Filters have predetermined set of possible values. View them with `listFilterValues()`. You can also search filter values with `searchFilterValues()`.
+```{r}
+head(listFilterValues(mart = ensembl, filter = "chromosome_name"))
+
+head(searchFilterValues(mart = ensembl, 
+				   filter = "chromosome_name", 
+				   pattern = "^GL"))
+
+head(searchFilterValues(mart = ensembl, 
+				   filter = "phenotype_description", 
+				   pattern = "Crohn"))
+```
+
+# Examples of biomaRt queries
+
+## Annotate a set of Affymetrix identifieers with HUGO symbol and chromosomal locations of corresponding genes
+
+Given a list of Affymetrix hgu133plus2 identifiers, retrieve the HUGO gene symbols, chromosome names, start and end positions, and bands of the corresponding genes.
+```{r}
+affyids = c("202763_at", "209310_s_at", "207500_at")
+getBM(attributes = c('affy_hg_u133_plus_2', # what output you want
+					 'hgnc_symbol',
+					 'chromosome_name',
+					 "start_position",
+					 "end_position",
+					 "band"),
+	  filters = "affy_hg_u133_plus_2",
+	  values = affyids,
+	  mart = ensembl)
+```
+
+## Annotate a set of EntrezGene identifiers with GO annotation
+
+Given a list of EntrezGene IDs, retrieve GO IDs related to biological proccesses related to the EntrezGene IDs.
+```{r}
+entrez = c("673", "837")
+goids = getBM(attributes = c("entrezgene_id", "go_id"), # output you want
+			  filters = "entrezgene_id", # restricting search scope
+			  values = entrez, # input values of the filter(s)
+			  mart = ensembl)
+```
+
+## Retrieve all HUGO gene symbols of genes that are located on chromosomes 17, 20, or Y and are associated with specific GO terms
+
+`getBM()` lets you use more than one filter at a time.
+```{r}
+# Things we have (filter values)
+go = c("GO:0051330","GO:0000080","GO:0000114","GO:0000082")
+chrom = c(17, 20, "Y")
+
+# Get things we want (attributes)
+getBM(attributes = "hgnc_symbol",
+	  filters = c("go", "chromosome_name"),
+	  values = list(go, chrom), mart = ensembl
+	  )
+```
+
+## Annotate a set of IDs with INTERPRO protein domain IDs
+
+Annotate two RefSeq IDs:
+```{r}
+refseqids = c("NM_005359","NM_000546")
+ipro = getBM(attributes = c("refseq_mrna", "interpro", "interpro_description"),
+			 filters = "refseq_mrna",
+			 values = refseqids,
+			 mart = ensembl)
+ipro
+```
+
+# Retrieve all entrezgene IDs and HUGO gene symbols of genes which have a "MAP kinase activity" GO term associated with it
+
+```{r}
+# GO ID for "MAP kinase activity
+gomk = "GO:0004707"
+getBM(attributes = c("entrezgene_id", "hgnc_symbol"),
+	  filters = "go",
+	  values = gomk,
+	  mart = ensembl)
+```
+
+# Given a set of EntrezGene IDs, retrieve 100bp upstream promoter sequences
+
+Use `getSequence()` for sequence-related queries - it's a wrapper for `getBM()`, but using that can get complicated.
+```{r}
+entrez = c("673", "7157", "837") # List of EntrezGene IDs
+# FIXME: error
+# getSequence(id = entrez,
+# 			type = "entrezgene_id", # like the "filter" of this query
+# 			seqType = "coding_gene_flank", 
+# 			upstream = 100, 
+# 			mart = ensembl)
+```
+
+# Retrieve all 5' UTR sequences of all genes that are located on chromosome 3 between the positions 185,514,033 and 185,535,839
+
+Use chromosomal coordinates to get sequences of all genes that lie in the given region. Must specify which type of identifier you want to retrieve along with the seqs.
+```{r}
+utr5 = getSequence(chromosome = 3, 
+				   start = 185514033, 
+				   end = 185535839, 
+				   type = "entrezgene_id", 
+				   seqType = "5utr", 
+				   mart = ensembl)
+utr5
+```
+
+# Retrieve protein sequences for a given list of EntrezGene IDs
+
+```{r}
+entgid_04 = c(100, 5728)
+protein = getSequence(id = entgid_04, 
+					  type = "entrezgene_id", # specifies which IDs are being used
+					  seqType = "peptide", 
+					  mart = ensembl)
+protein
+
+# My own sample
+gene_symbols_01 = c("POLE", "MLH1")
+protein_2 = getSequence(id = gene_symbols_01, 
+						type = "hgnc_symbol", 
+						seqType = "peptide", 
+						mart = ensembl)
+protein_2
+```
+
+# Retrieve known SNPs located on the human chromosome 8 between positions 148350 and 148612
+
+Need to connect to a different BioMart database, namely snp.
+```{r}
+snpmart = useMart(biomart = "ENSEMBL_MART_SNP")
+head(listDatasets(mart = snpmart), n=40)
+snpmart = useDataset(dataset = "hsapiens_snp", mart = snpmart)
+
+head(listAttributes(mart = snpmart), n=40)
+head(listFilters(snpmart), n=40)
+```
+
+Use desired attributes and filters
+```{r}
+atts = c("refsnp_id", "allele", "chrom_start", "chrom_strand")
+filts = c("chr_name", "start", "end")
+
+getBM(attributes = atts, 
+	  filters = filts, 
+	  values = list(8, 148350, 148612), 
+	  mart = snpmart)
+```
+
+# Given the human gene TP53, get the human chr location and also retriece the chr location and RefSeq ID of its homolog in mouse
+
+Use `getLDS()` to link 2 BioMart datasets with each other and construct a query over the two datasets. In Ensembl, this equates to retrieving homology data across species. Usage is similar to `getBM()`. The linked dataset is provided by a separate mart object and you have to specify separate filters and attributes. Filters can be applied to one or both datasets.
+```{r}
+humanmart = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+mousemart = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+
+getLDS(attributes = c("hgnc_symbol", "refseq_mrna", "chromosome_name", "start_position"), 
+	   filters = "hgnc_symbol", 
+	   values = "TP53", 
+	   mart = humanmart, 
+	   attributesL = c("refseq_mrna", "chromosome_name", "start_position"), 
+	   martL = mousemart)
+```
+

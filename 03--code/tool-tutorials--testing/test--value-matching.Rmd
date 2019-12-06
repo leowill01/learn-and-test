@@ -1,0 +1,40 @@
+---
+title: "key-value replacement"
+output: html_notebook
+---
+
+# Setup
+
+```{r}
+library("tidyverse")
+```
+
+Test: match values in a dataframe with keys in a separate key:value table and replace the dataframe values with the ones from the key:value table
+
+# Make example initial df
+
+```{r}
+orig = data.frame(gene_symbol=c("A", "B", "C", "D"), result=c(3, 1, 2, 4))
+orig
+```
+
+# Make example key:value table
+
+```{r}
+key_val = data.frame(gene_symbol=c("C", "D", "A", "B"), entrez_id=c("83372", "91101", "30121", "590"))
+key_val
+```
+
+# Replace df values with key values
+
+```{r}
+orig
+key_val
+match(orig$gene_symbol, key_val$gene_symbol)
+key_val[match(orig$gene_symbol, key_val$gene_symbol), "entrez_id"]
+orig$entrez_id = key_val[match(orig$gene_symbol, key_val$gene_symbol), "entrez_id"]
+orig = orig %>% 
+	select(entrez_id, result)
+orig
+```
+

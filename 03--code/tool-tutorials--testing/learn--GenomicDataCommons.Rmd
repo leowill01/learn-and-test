@@ -1,0 +1,38 @@
+---
+title: "Learn: package `GenomicDataCommons`"
+author: "Leo Williams"
+---
+
+# About
+
+This tutorial is adapted from the instructional document [***The `GenomicDataCommons` Package***](https://bioconductor.org/packages/release/bioc/vignettes/GenomicDataCommons/inst/doc/overview.html#1_what_is_the_gdc).
+
+# Setup
+
+```{r setup, results='hide'}
+library(GenomicDataCommons)
+```
+
+# 1 What is the GDC?
+
+# 2 Quickstart
+
+## 2.1 Installation
+
+## 2.2 Check connectivity and status
+
+Check required network activity:
+
+```{r}
+status()
+```
+
+Check status in code:
+
+```{r}
+stopifnot(status()$status == "OK")
+```
+
+## 2.3 Find data [complete later]
+
+## 2.4 Download data

@@ -1,0 +1,397 @@
+---
+title: 'Learn: vcfR'
+subtitle: 'From: vcfR Documentation'
+output:
+  html_notebook:
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
+---
+
+These tutorials are based on the official `vcfR` tutorials from the [vcfR documentation](https://knausb.github.io/vcfR_documentation/index.html)
+
+# Setup
+
+```{r}
+library(vcfR)
+library(tidyverse)
+```
+
+
+# A quick introduction
+
+[vcfR tutorial: A quick introduction](https://knausb.github.io/vcfR_documentation/quick_intro.html)
+
+## Preliminaries
+
+Since R reads all data into memory, sometimes it's best to split VCF data up into chromosomes.
+
+## Data input
+
+vcfR works with VCF files and you can also add FASTA and GFF files for context, but these aren't required.
+
+```{r}
+library(pinfsc50)
+pkg = "pinfsc50"
+vcf_file = system.file("extdata", "pinf_sc50.vcf.gz", package = pkg)
+dna_file = system.file("extdata", "pinf_sc50.fasta", package = pkg)
+gff_file = system.file("extdata", "pinf_sc50.gff", package = pkg)
+```
+
+Read in the VCF file:
+
+```{r}
+vcf = read.vcfR(vcf_file, verbose=F)
+```
+
+The file is stored as a vcfR object (S4 class) with 3 slots, one each for metadata, fixed data, and genotype data. 
+
+Read in FASTA files with the `ape` package:
+
+```{r}
+library("ape")
+dna = read.dna(dna_file, format = "fasta")
+```
+
+Annotation files contain coordinates for genomic annotations. GFF is currently supported. Read in a GFF file with `read.table()`:
+
+```{r}
+gff = read.table(gff_file, sep = "\t", quote = "")
+```
+
+vcfR was designed to work with individual chromosomes as reading an entire genome into memory is a technical challenge.
+
+## Creating chromR objects
+
+Once data is in memory, use `create.chromR()` to create a chromR object and populate it with VCF data.
+
+```{r}
+chrom = create.chromR(name="Supercontig", vcf = vcf, seq = dna, ann = gff)
+```
+
+Notice the warning that the contig names are not exactly the same bc of different sources. In this case the warning can be ignored because they refer to the same data.
+
+The `name` parameter is the name of the chromR object and used when plotting it. 
+
+## Processing chromR objects
+
+Get a quick look at the chromR object data by plotting.
+
+```{r}
+plot(chrom)
+```
+
+Use the `masker()` function to filter out low-confidence data. It uses quality, depth, and mapping quality to try and select high quality variants. Low quality variants are not deleted, but instead a logical vector is made to indicate which variants have been filtered.
+
+```{r}
+chrom = masker(chrom, min_QUAL = 1, min_DP = 300, max_DP = 700, min_MQ = 59.9, max_MQ = 60.1)
+plot(chrom)
+```
+
+Once satisfied with filtering and the resulting set of high-quality variants, process the chromR object with `proc.chromR()`. This calls several helper functions to process the variant, sequence, and annotation data for viz.
+
+```{r}
+chrom = proc.chromR(chrom, verbose = T)
+plot(chrom)
+```
+
+## Visualizing the data
+
+3 types of data have been input: variant, sequence, and annotation. They've been inserted into a chromR object, and low-quality variants have been masked. High-quality variants were processed. Now we can visualize these data.
+
+`chromoqc()` uses `layout()` to make composite plots.
+
+```{r}
+chromoqc(chrom, dp.alpha = 20)
+```
+
+Zoom in on a feature using `xlim()`.
+
+```{r}
+chromoqc(chrom, xlim=c(5e+05, 6e+05))
+```
+
+## Output of data
+
+### Output to a VCF file
+
+Variants determined to be high-quality by filtering with `masker()` can be output with `write.vcf()`. It takes a vcfR object and subsets it using the masked variants and output to a `*vcf.gz` file.
+
+### Conversion to other R objects
+
+See other vignettes such as "Converting data".
+
+# VCF data
+
+Variant callers tend to aggressively call variants with the perspective that a downstream QC step will remove low quality variants.
+
+## Three sections
+
+A VCF file can be thought of as having 3 sections:
+
+1. a metadata region (meta)
+1. a fixed region (fix)
+1. a genotype region (gt)
+
+The ***meta region*** is at the top of the file and defines abbreviations used elsewhere in the file. It also documents software used in the creation of the VCF and maybe paramaters as well.
+
+Below the meta region is the ***fixed data (fix) region***. These data are tabular and the first 8 columns contain info about the variants. These first 8 columns are required for a VCF. Other columns are common too. 
+
+At column 10, there begins a column for each sample. These columns contain information about each sample for each variant. This is the ***genotype (gt) region***. The organization of each cell containing a genotype and associated info is specified in column 9.
+
+VCFs are flexible - not all tools will use all types of VCF data, and non-standard data can be incorporated. This means that not all VCF files contain the same information.
+
+For this example, use the data included with `vcfR`.
+
+```{r}
+data(vcfR_example)
+vcf
+```
+
+## The meta region
+
+The meta region contains information about the file, its creation, as well as information to interpret abbreviations used elsewhere in the file. Each line begins with a double pound sign (##).
+
+```{r}
+# vcf@meta %>% head
+vcf@meta[1:7]
+# strwrap(vcf@meta[1:7])
+```
+
+1st line: version of the VCF format. Required.
+
+2nd line: specifies software used to create the VCF. Not required. Entire pipeline does not get documented, e.g. which aligner was used upstream.
+
+Lines 3+: Contain `INFO` or `FORMAT` specifications which define abbreviations used in the `fix` and `gt` regions.
+
+The meta region may have long lines that are hard to view. To view them easily, use `queryMETA()`.
+
+```{r}
+queryMETA(vcf)
+```
+
+When an `element=` parameter is included, only info about that element is returned.
+
+```{r}
+queryMETA(vcf, element = "DP")
+```
+
+The element `DP` has both `INFO` and `FORMAT` definitions. Be more specific to only return one. The `<` is required to distinguish the `FORMAT` element from `INFO` element
+
+```{r}
+queryMETA(vcf, element = "FORMAT=<ID=DP", nice = F)
+```
+
+## The fix region
+
+This region contains info for each variant which is sometimes summarized over all samples. The first 8 columns are: `CHROM`, `POS`, `ID`, `REF`, `ALT`, `QUAL`, `FILTER`, and `INFO`. This is per-variant info and is fixed over all samples. Multiple alt alleles are delimited with commas.
+
+Get the fixed region with `getFIX()`.
+
+```{r}
+getFIX(vcf) %>% head
+```
+
+The 8th column, `INFO`, is a `;`-delimited list of info which can be very long. `gewtFIX()` will suppress this column by default. Each abbreviation in the `INFO` column should be defined in the meta region.
+
+## The gt region
+
+The `gt` (genotype) region contains info about each variant ***for each sample***. They are `:`-delimited. Multiple types of data for each genotype can be stored. The format of this data is specified by the FORMAT column (col 9) in the VCF. The definitions of the acronyms can be found by querying the meta region as shown previously. ***Every variant does not necessarily have the same info***, so the rows are best treated independently.
+
+```{r}
+vcf@gt[1:6, 1:4]
+```
+
+## vcfR 
+
+[Covered in previous sections]
+
+# vcfR objects
+
+The vcfR package uses two objects to contain data: `vcfR` and `chromR`. The `vcfR` object is intended to contain data read in from a VCF file. It can be manipulated in many ways and can also be used as part of the more complicated `chromR` object. This is an overview of `vcfR` objects.
+
+## Creation
+
+Create a new vcfR object. `read.vcfR()` reads in a VCF file and returns a vcfR object.
+
+```{r}
+library(vcfR)
+vcf_file = system.file("extdata", "pinf_sc50.vcf.gz", package = "pinfsc50")
+vcf = read.vcfR(vcf_file, verbose = T)
+```
+
+## Summarization
+
+Explore the vcfR object to validate that it contains what we expect. Two relevant tools are the `show` method and `head()`.
+
+When the vcfR object name is executed with no function, it invokes the `show` method, which reports a summary of the contents.
+
+```{r}
+vcf
+```
+
+The `head()` function reports the top of the object. Here we see the first few lines of each of the meta, fix, and gt slots.
+
+```{r}
+head(vcf)
+```
+
+## Queries
+
+Once the vcfR object is validated, we can explore further.
+
+VCF files only report variable (polymorphic) positions. All `fix` columns are summaries over all samples, so removing some samples may make positions unpolymorphic, in which case the info would no longer be accurate. `is.polymorphoc()` allows you to query whether the positions are polymorphic.
+
+```{r}
+is.polymorphic(vcf, na.omit = T) %>% head
+```
+
+`is.biallelic()` queries positions to determine if they contain no more than 2 alleles. Some downstream tools and R packages can only handle biallelic loci.
+
+```{r}
+is.biallelic(vcf) %>% head
+```
+
+VCFs can contain both SNP/Vs as well as indels or CNA/Vs. Since some analyses require only single nucleotide variants, use `extract.indels()` to subset the data to only the SNPs.
+
+```{r}
+vcf2 = extract.indels(vcf)
+vcf2
+```
+
+## Subsetting
+
+`vcfR` allows you to manipulate VCF data. This makes it **possible to make invalid VCF files, so think carefully!**
+
+Square brackets (`[]`) allow manipulation of vcfR objects similar to other R objects. The `fix` and `gt` slots contain matrices. **When columns are selected by subsetting *after* the comma, only columns for the `gt` slot are manipulated -- the `fix` slot is maintained**.
+
+Basically, **rows select variants (`fix`), columns select sample genotypes (`gt`)**.
+
+```{r}
+vcf
+```
+
+1st (`gt`) column contains the info for all `gt` columns, so you want to include that always.
+
+```{r}
+vcf[,1:4]
+```
+```{r}
+vcf[1:4,]
+```
+
+Subsetting can be combined with the previously mentioned query functions for more complex operations.
+
+# How much memory
+
+# Extracting matrices
+
+# Tidy vcfR
+
+Several functions have been added to add tidy functionality to vcfR.
+
+Load example dataset.
+
+```{r}
+library(vcfR)
+data("vcfR_test")
+vcfR_test
+```
+
+`vcfR2tidy()` will convert all the data in the vcfR object to a tibble. If this is going to be very large, you can specify which parts of the VCF we want converted into a tibble. `vcf_field_names()` can remind us which data are contained in the vcfR object.
+
+```{r}
+vcf_field_names(vcfR_test)
+vcf_field_names(vcfR_test, tag = "FORMAT")
+```
+
+Make a tidy vcfR object. This is a list containing 3 elements just like a vcfR object: `fix`, `gt`, and `meta`. Each element is a tibble. More info can be found with `?vcfR2tidy`.
+
+```{r}
+Z = vcfR2tidy(vcfR_test, format_fields = c("GT", "DP"))
+names(Z)
+
+Z$meta
+Z$fix
+Z$gt
+```
+
+# chromR objects
+
+The chromR object was created to integrate VCF data with sequence data (FASTA) and annotation (GFF) data. By integrating these data, new insights may be obtained, e.g. long stretches of chromosomes with no variants may look mysterious without context, but with a reference FASTA it may be a region of Ns.
+
+## Creating chromR objects
+
+Using example data from the `pinfsc50` package: 
+
+```{r}
+library(vcfR)
+
+# Find the files
+vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz", package = "pinfsc50")
+dna_file <- system.file("extdata", "pinf_sc50.fasta", package = "pinfsc50")
+gff_file <- system.file("extdata", "pinf_sc50.gff", package = "pinfsc50")
+
+# Input the files.
+vcf <- read.vcfR(vcf_file, verbose = FALSE)
+dna <- ape::read.dna(dna_file, format = "fasta")
+gff <- read.table(gff_file, sep="\t", quote="")
+
+# Create a chromR object.
+chrom <- create.chromR(name="Supercontig", vcf=vcf, seq=dna, ann=gff, verbose=TRUE)
+```
+
+Verify the chromR contains the expected data by viewing the object's name at the console.
+
+```{r}
+chrom
+```
+
+There are at least 2 ways to plot the chromR object. `plot()` plots histograms with some data summaries. DP here is a sum over all samples. QUAL is not easily interpreted and may not be a good parameter to judge variants. SNP densities are created during the processing of chromR objects.
+
+```{r}
+plot(chrom)
+```
+
+`chromoqc()` is a second way to plot which plots the same information as `plot()` but distributes the data along its chromosomal coordinates.
+
+```{r}
+chromoqc(chrom)
+```
+
+## Processing chromR objects
+
+Creation (loading data into) of a chromR object is separated from processing and should only be required once. Processing generates summaries of the data and the crhromR object needs to be updated. New data summaries now appear in the plots.
+
+```{r}
+chrom = proc.chromR(chrom)
+plot(chrom)
+chromoqc(chrom)
+```
+
+## Masking low quality variants
+
+Use the `masker()` function to mask out variants deemed undesirable. Geometry of the data matrices is retained. These actions allow one to focus on variants with relatively uniform depth and mapping quality.
+
+```{r}
+chrom <- masker(chrom, min_QUAL = 0, min_DP = 350, max_DP = 650, min_MQ = 59.5, max_MQ = 60.5)
+chrom <- proc.chromR(chrom)
+plot(chrom)
+chromoqc(chrom)
+```
+
+
+# Visualization 1
+
+# Visualization 2
+
+# Sequence coverage
+
+# Filtering data
+
+# Ranking data
+
+# Windowing
+
+# Genetic differentiation

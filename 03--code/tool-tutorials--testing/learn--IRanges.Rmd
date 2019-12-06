@@ -1,0 +1,77 @@
+---
+title: "Learn: IRanges"
+output:
+  html_notebook:
+    toc: true
+    toc_float: true
+---
+
+Adapted from "An Overview of the *IRanges* package" (Aboyoun, et. al 2019) [vignette](http://bioconductor.org/packages/release/bioc/html/IRanges.html).
+
+# Setup
+
+```{r setup, results='hide'}
+library(IRanges)
+```
+
+# IRanges objects
+
+To make an IRanges object, call the `IRanges()` function. Ranges are normally specified by passing 2 of the 3 parameters: start, end, and width. All of these construct the same type of object.
+
+```{r}
+ir1 = IRanges(start = 1:10, width = 10:1)
+ir1
+str(ir1)
+```
+
+```{r}
+ir2 = IRanges(start = 1:10, end = 11)
+ir2
+ir3 = IRanges(end = 11, width = 10:1)
+ir3
+identical(ir1, ir2) && identical(ir1, ir3)
+```
+
+```{r}
+ir = IRanges(c(1, 8, 14, 15, 19, 34, 40), 
+			 width = c(12, 6, 6, 15, 6, 2, 7))
+ir
+```
+
+Access the starts, ends, and widths with the `start()`, `end()`, and `width()` functions.
+
+```{r}
+start(ir)
+end(ir)
+width(ir)
+```
+
+Subsetting an IRanges object is supported by numerical and logical indices.
+
+```{r}
+ir[1:4]
+start(ir)
+start(ir) <= 15
+ir[start(ir) <= 15]
+```
+
+To illustrate range operations, here's a function to plot ranges:
+
+```{r}
+plotRanges = function(x, xlim=x, main=deparse(substitute(x)), col="black", sep=0.5, ...) {
+	height = 1
+	if (is(xlim, "IntegerRanges"))
+		xlim = c(min(start(xlim)), max(end(xlim)))
+		bins <- disjointBins(IRanges(start(x), end(x) + 1))
+		plot.new()
+		plot.window(xlim, c(0, max(bins) * (height + sep)))
+		ybottom <- bins * (sep + height) - height
+		rect(start(x)-0.5, ybottom, end(x)+0.5, ybottom + height, col=col, ...) 
+		title(main) 
+		axis(1)
+}
+
+plotRanges(ir)
+```
+
+[got too complicated...]

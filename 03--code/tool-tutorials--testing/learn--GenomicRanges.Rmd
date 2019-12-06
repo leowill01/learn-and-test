@@ -1,0 +1,291 @@
+---
+title: "Learn: GenomicRanges"
+output: html_notebook
+---
+
+Based on the document ["An Introduction to the GenomicRanges Package"](https://bioconductor.org/packages/release/bioc/vignettes/GenomicRanges/inst/doc/GenomicRangesIntroduction.html).
+
+# Introduction
+
+`GenomicRanges` is the foundation for representing genomic locations within Bioconductor.
+
+In the Bioconductor hierarchy, it builds upon:
+
+- `IRanges`
+
+, and provides support for:
+
+- `BSgenome` (infrastructure)
+- `Rsamtools` (I/O)
+- `ShortRead` (I/O, QA)
+- `rtracklayer` (I/O)
+- `GenomicFeatures` (infrastructure)
+- `GenomicAlignments` (sequence reads)
+- `VariantAnnotation` (called variants)
+- many others
+
+This package lays a foundation for genomic analysis by introducing 3 object classes:
+
+- `GRanges`: genomic ranges
+- `GPos`: genomic positions
+- `GRangesList`: groups of genomic ranges
+
+# Setup
+
+```{r setup, cache=FALSE, include=FALSE}
+library(knitr)
+# Set working directory
+opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+library(GenomicRanges)
+```
+
+# `GRanges`: Genomic Ranges
+
+`GRanges` class represents a collection of genomic ranges that each have a single start and end location on the genome. It can be used to store the location of genomic features such as exons. A `GRanges` object can be made with the `GRanges` function.
+
+Upon viewing the GRanges object, genomic coordinates are shown on the left side and the metadata is shown on the right side, separated by `|`. Almost anything can be stored in the metadata portion.
+
+```{r}
+gr = GRanges(seqnames = Rle(c("chr1", "chr2", "chr1", "chr3"), 
+							c(1, 3, 2, 4)), 
+			 ranges = IRanges(start = 101:110, 
+			 				 end = 111:120, 
+			 				 names = head(letters, 10)), 
+			 strand = Rle(strand(c("-", "+", "*", "+", "-")), 
+			 			 c(1, 2, 2, 3, 2)), 
+			 score = 1:10, 
+			 GC = seq(1, 0, length = 10))
+gr
+
+```
+
+Components of a `GRanges` object can be extracted using `seqnames()`, `ranges()`, and `strand()` accessor functions.
+
+```{r}
+seqnames(gr)
+```
+
+```{r}
+ranges(gr)
+```
+
+```{r}
+strand(gr)
+```
+
+The genomic ranges can be extracted without the corresponding metadata with the `granges()` function.
+
+```{r}
+granges(gr)
+```
+
+Annotations (metadata) for these coordinates can be extracted as a `DataFrame` object using the `mcols()` accessor.
+
+```{r}
+mcols(gr) # "metadata columns"
+
+mcols(gr)$score
+gr$score # same thing
+```
+
+Info about the lengths of the various sequences that the ranges are aligned to can also be stored in the `GRanges` object. E.g. if the data is from *Homo sapiens*, we can set the values as:
+
+```{r}
+seqlengths(gr) <- c(249250621, 243199373, 198022430)
+```
+
+And then retrieve with:
+
+```{r}
+seqlengths(gr)
+```
+
+Use `length()` and `names()` to access the length and names of the `GRanges` object.
+
+```{r}
+names(gr)
+length(gr)
+```
+
+## Splitting and combining `GRanges` objects
+
+`GRanges` objects can be divided into groups using the `split` method, which produces a `GRangesList` object.
+
+```{r}
+sp = split(gr, rep(1:2, each = 5))
+sp
+```
+
+Separate GRanges instances can be concatenated by using the `c` and `append` methods
+
+```{r}
+sp[1] # GRangesList object
+sp[[1]] # GRanges object
+c(sp[[1]], sp[[2]])
+```
+
+
+
+## Subsetting `GRanges` objects
+
+`GRanges` objects act like vectors of ranges, with the expected vector-like subsetting operations available
+
+```{r}
+gr[2]
+gr[2:3]
+```
+
+A second argument to `[` can be used to specify metadata columns to extract
+
+```{r}
+gr[2:3, "GC"]
+```
+
+GRanges elements can be assigned to the `GRanges` object. Example: 2nd row of a GRanges object is replaced with the 1st row of `gr`:
+
+```{r}
+singles = split(gr, names(gr))
+grMod = gr
+grMod[2] = singles[[1]]
+head(grMod, 3)
+```
+
+Methods to repeat, reverse, or select specific GRanges elements
+
+```{r}
+rep(singles[[2]], times = 3)
+
+rev(gr)
+
+head(gr, 2)
+
+tail(gr, 2)
+
+window(gr, start=2, end=4)
+
+# NOTE: I dont understand this
+IRanges(start = c(2,7), end = c(3,9))
+gr[IRanges(start = c(2,7), end = c(3,9))]
+```
+
+## Basic interval operations for `GRanges` objects
+
+Basic interval characteristics of GRanges objects can be extracted using the `start()`, `end()`, `width()`, and `range()` methods
+
+```{r}
+gr[1:3]
+g = gr[1:3]
+```
+
+```{r}
+append(g, singles[[10]])
+g = append(g, singles[[10]])
+```
+
+```{r}
+start(g)
+```
+
+```{r}
+end(g)
+```
+
+```{r}
+width(g)
+```
+
+```{r}
+range(g)
+```
+
+The `GRanges` class also has many methods for manipulating the ranges. The methods can be classified as ***intra-range***, ***inter-range***, and ***between-range*** methods.
+
+### Intra-range methods
+
+***Intra-range*** methods operate on each element of a GRanges object independent of other ranges in the object
+
+`flank()` recovers regions flanking the set of ranges in the GRanges object
+
+```{r}
+g
+# include 10 bases upstream
+flank(g, 10)
+```
+
+```{r}
+g
+# include 10 bases downstream
+flank(g, 10, start = F)
+```
+
+
+`shift()` will move ranges by a specific number of base pairs
+
+```{r}
+g
+shift(g, 5) # only goes in 1 direction
+shift(g, -5)
+```
+
+`resize()` extends ranges by a specified width
+
+```{r}
+g
+resize(g, width = 30) # only works in 1 direction
+```
+
+
+### Inter-range methods
+
+***Inter-range methods*** involve comparisons between ranges in a single GRanges object
+
+`reduce()` aligns the ranges and merges overlapping ranges to make a simplified set
+
+```{r}
+g
+reduce(g)
+```
+
+`gaps()` returns the gaps between ranges
+
+```{r}
+g
+gaps(g)
+```
+
+`disjoin()` represents a GRanges object as a collection of non-overlapping ranges
+
+```{r}
+g
+disjoin(g) # NOTE the differing chr not just the ranges!
+```
+
+`coverage()` quantifies the degree of overlap for all the ranges in a GRanges object
+
+```{r}
+g
+coverage(g)
+```
+
+## Interval set operations for GRanges objects
+
+### Between-range methods
+
+***Between-range*** methods involve operations between two `GRanges` objects. `findOverlaps()` and related operations are centrally important. Additional operations treat GRanges objects as mathematical sets of coordinates, like `union()`, `intersect()`, and `setdiff()` for asymmetric difference.
+
+```{r}
+g2 = head(gr, 2)
+g; g2
+union(g, g2) # merges overlapping ranges
+```
+
+```{r}
+intersect(g, g2)
+```
+
+```{r}
+setdiff(g, g2)
+```
+
+[to be continued...]

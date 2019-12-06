@@ -1,0 +1,298 @@
+---
+title: 'Learn: Biostrings'
+output:
+  html_notebook:
+    theme: "darkly"
+    toc: true
+    toc_float:
+      collapsed: false
+    number_sections: true
+  pdf_document:
+    toc: true
+---
+<!-- params: -->
+
+# Introduction
+
+Biostrings reference site: [link](http://bioconductor.org/packages/release/bioc/html/Biostrings.html)
+
+Workflow adapted from:
+
+- [An overview of the Biostrings/BSgenome framework](https://bioconductor.org/help/course-materials/2011/BioC2011/LabStuff/BiostringsBSgenomeOverview.pdf)
+- [The Biostrings 2 classes (work in progress)](https://bioconductor.org/packages/release/bioc/vignettes/Biostrings/inst/doc/Biostrings2Classes.pdf)
+- ["R programming II: Sequence analysis with Biostrings"](http://www.bioinformatics-sannio.org/wordpress/wp-content/uploads/2015/06/R-programming-3.1-sequence-analysis-with-Biostrings.pdf), Luigi Cerulo, University of Sannio
+- [Handling genomic data using Bioconductor I: Biostrings and BSgenome](http://web1.sph.emory.edu/users/hwu30/teaching/bioc/biostrings.pdf)
+- [Working with sequences and genomic features](https://monashbioinformaticsplatform.github.io/r-more/topics/sequences_and_features.html)
+- [Efficient genome searching with Biostrings and the BSgenome data packages](http://52.71.54.154/packages/release/bioc/vignettes/BSgenome/inst/doc/GenomeSearching.pdf)
+
+```{r setup, results='hide'}
+# Load packages
+library(tidyverse)
+library(knitr)
+library(Biostrings)
+library(BSgenome)
+library(BSgenome.Celegans.UCSC.ce2)
+
+
+# Set working directory
+opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+# Doc: An overview of the Biostrings/BSgenome framework
+
+## Introduction
+
+***Biostrings***:
+
+- Containers for representing large biological sequences
+- Utilities for basic computations on sequences
+- Tools for sequence matching and pairwise alignments
+
+***BSgenome***:
+
+- Full genomes stores in Biostrings containers
+- Support for adding new genomes
+
+## Biostrings
+
+- Single sequence: `XString` (virtual class). Extensions: `BString`, `DNAString`, `RNAString`, `AAString`.
+- Set of sequences: `XStringSet` (virtual class). Extensions: `BStringSet`, `DNAStringSet`, `RNAStringSet`, `AAStringSet`.
+- Set of views on a sequence: `XStringViews`
+- Masked sequence: `MaskedXString` (virtual class). Extensions: `MaskedBString`, `MaskedDNAString`, `MaskedRNAString`, `MaskedAAString`.
+
+### Basic utilities
+
+[requires C. elegans genome]
+
+Extract a subsequence from a BSgenome
+
+I/O reading sequences
+
+### XString constructors
+
+Make a DNAString object with `DNAString()`
+
+```{r}
+dna = DNAString("ACTGTAGCTGATGCTGAAC")
+dna
+```
+
+Make an RNAString object with `RNAString()`
+
+```{r}
+rna = RNAString(dna)
+rna
+```
+
+Make an AAString object with `translate()`
+
+```{r}
+aa = translate(rna)
+aa
+```
+
+### XStringSet constructors
+
+[skipped]
+
+### Basic transformations
+
+Reverse sequence with `reverse()`
+
+```{r}
+reverse(dna)
+reverse(rna)
+reverse(aa)
+```
+
+Complement sequence with `complement()`
+
+```{r}
+complement(dna)
+complement(rna)
+# complement(aa) # Impossible
+```
+
+Reverse complements with `reverseComplement()`
+
+```{r}
+reverseComplement(dna)
+reverseComplement(rna)
+translate(reverseComplement(dna))
+# reverseComplement(aa) # Impossible
+```
+
+Base frequency table with `alphabetFrequency()`
+
+```{r}
+dna_letters = alphabetFrequency(dna, baseOnly=T)
+dna_letters
+str(dna_letters)
+barplot(dna_letters[1:4])
+```
+
+Character translation with `chartr()`
+
+```{r}
+dna2 = chartr(old = "C", new = "T", x = dna)
+dna2
+dna2_letters = alphabetFrequency(dna2, baseOnly=T)
+barplot(dna2_letters[1:4], ylim = c(0, 10))
+```
+
+### Counting letter occurrences
+
+List working alphabets for DNA-, RNA-, or AAString objects
+
+```{r}
+# DNA
+alphabet(dna) # x = just any object of whichever type
+# RNA
+alphabet(rna)
+# AA
+alphabet(aa)
+```
+
+Get alphabet frequency of DNA-, RNA-, or AAString objects
+
+```{r}
+# For DNA
+alphabetFrequency(dna)
+# Bases only
+alphabetFrequency(dna, baseOnly=T)
+
+# RNA
+alphabetFrequency(rna)
+# Bases only
+alphabetFrequency(rna, baseOnly=T)
+
+# AA
+alphabetFrequency(aa)
+# Bases only
+alphabetFrequency(aa) # Impossible - no "bases only" option for AA
+```
+
+Get dinucleotide frequencies
+
+```{r}
+dinucleotideFrequency(dna)
+```
+
+Get trinucleotide frequency
+
+```{r}
+trinucleotideFrequency(dna)
+barplot(trinucleotideFrequency(dna))
+```
+
+
+### Predefined constants
+
+DNA bases
+
+```{r}
+DNA_BASES
+```
+
+DNA alphabet
+
+```{r}
+DNA_ALPHABET
+```
+
+IUPAC code map
+
+```{r}
+IUPAC_CODE_MAP
+```
+
+
+# Doc: Efficient genome searching with Biostrings and the BSgenome data packages
+
+## The Biostrings-based genome data packages
+
+## Finding an arbitrary nucleotide pattern in a chromosome
+
+Load *C. elegans* genome
+
+```{r}
+# Use to learn how to install a new genome
+?available.genomes
+# Install genome 
+# BioManager::install(BSgenome.Celegans.UCSC.ce2)
+# See which genomes are installed
+installed.genomes()
+# Assign genome to variable
+genome_cel = BSgenome.Celegans.UCSC.ce2
+genome_cel
+```
+
+Check class of the genome
+
+```{r}
+class(genome_cel)
+```
+
+
+```{r}
+# Show the genome organism with `organism()`
+organism(genome_cel)
+# Get the genome provider with `provider()`
+provider(genome_cel)
+# Get the provider version
+providerVersion(genome_cel)
+# Get the sequence names
+seqnames(genome_cel)
+# For a complete list of accessor methods, see `?BSgenome`
+```
+
+Display chromosome 1. Almost never need reverse complement because everything should be transformed wrt. the fwd strand.
+
+```{r}
+# Fwd strand (default)
+genome_cel$chrI
+# Rev strand
+reverseComplement(genome_cel$chrI)
+```
+
+Retrieve the number of bases
+
+```{r}
+chr1 = genome_cel$chrI
+length(chr1)
+```
+
+Basic stats
+
+```{r}
+af1 = alphabetFrequency(chr1)
+af1
+```
+
+Count all exact matches of "ACCCAGGGC"
+
+```{r}
+p1 = "ACCCAGGGC"
+# Exact matching
+countPattern(pattern = p1, subject = chr1)
+# Support mismatching
+countPattern(pattern = p1, subject = chr1, max.mismatch = 1)
+
+```
+
+Store locations of matches as an `XStringViews` object with `matchPattern()`
+
+```{r}
+m1 = matchPattern(pattern = p1, subject = chr1, max.mismatch = 1)
+m1
+class(m1)
+```
+
+Get mismatching letters for each sequence pattern match with `mismatch()`
+
+```{r}
+mismatch(p1, m1[4:6])
+p1
+m1[[4]][6]
+```
+
