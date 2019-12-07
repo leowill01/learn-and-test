@@ -36,3 +36,92 @@ stopifnot(status()$status == "OK")
 ## 2.3 Find data [complete later]
 
 ## 2.4 Download data
+
+## 2.5 Metadata queries
+
+# 3 Basic design
+
+This package design is meant to have some similarities to the “hadleyverse” approach of dplyr. Roughly, the functionality for finding and accessing files and metadata can be divided into:
+
+1. Simple query constructors based on GDC API endpoints.
+2. A set of verbs that when applied, adjust filtering, field selection, and faceting (fields for aggregation) and result in a new query object (an endomorphism)
+3. A set of verbs that take a query and return results from the GDC
+
+Here is an overview of functionality:
+
+- Creating a query:
+	- `projects()`
+	- `cases()`
+	- `files()`
+	- `annotations()`
+- Manipulating a query:
+	- `filter()`
+	- `facet()`
+	- `select()`
+- Introspection on the GDC API fields:
+	- `mapping()`
+	- `available_fields()`
+	- `default_fields()`
+	- `grep_fields()`
+	- `field_picker()`
+	- `available_values()`
+	- `available_expand()`
+- Executing an API call to retrieve query results
+	- `results()`
+	- `count()`
+	- `response()`
+- Raw data file downloads
+	- `gdcdata()`
+	- `transfer()`
+	- `gdc_client()`
+- Summarizing and aggregating field values (faceting)
+	- `aggregations()`
+- Authentication
+	- `gdc_token()`
+- BAM file slicing
+	- `slicing()`
+	
+# 4 Usage
+
+Two main classes of operations when working with the GDC:
+
+1. Querying metadata and finding data files
+2. Transferring raw or processed data
+
+## 4.1 Querying metadata
+
+Typically, one wants to query metadata to either filter to find files to download *or* to perform an aggregation (e.g. similar to `table()`).
+
+General steps for querying metadata:
+
+1. Create a "blank" query
+2. `filter` to limit results
+3. Retrieve results 
+
+The `GenomicDataCommons` has helper functions to for listing fields that are available for filtering.
+
+In addition to fetching results, the GDC API allows faceting/aggregating, which is useful for making reports, dashboards, etc.
+
+### 4.1.1 Creating a query
+
+Queries start in R and follow the four metadata endpoints available at the GDC:
+
+- `projects()`
+- `cases()`
+- `files()`
+- `annotations()`
+
+Make an object of class `GDCQuery` (also has class `gdc_projects` and `list`)
+
+```{r}
+pquery = projects()
+class(pquery)
+str(pquery)
+pquery
+```
+
+The object has the following elements:
+
+- `$fields`: char vector of the fields to be returned when the data is retrieved. The default fields will be used (`default_fields()`) if no fields are specified.
+- `$filters`: contains results after calling the `filter()` method and is used to filter results upon retrieval
+- `$facets`: 
