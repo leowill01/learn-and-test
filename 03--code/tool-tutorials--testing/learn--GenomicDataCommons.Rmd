@@ -115,8 +115,6 @@ Make an object of class `GDCQuery` (also has class `gdc_projects` and `list`)
 
 ```{r}
 pquery = projects()
-class(pquery)
-str(pquery)
 pquery
 ```
 
@@ -124,4 +122,120 @@ The object has the following elements:
 
 - `$fields`: char vector of the fields to be returned when the data is retrieved. The default fields will be used (`default_fields()`) if no fields are specified.
 - `$filters`: contains results after calling the `filter()` method and is used to filter results upon retrieval
-- `$facets`: 
+- `$facets`: char vector of field names used to aggregate data with `aggregations()`
+- `$archive`: either "default" or "legacy"
+- `$token`: character token from the GDC. See the authentication section for details.
+
+Look at the structure of the query
+
+```{r}
+class(pquery)
+str(pquery)
+```
+
+### 4.1.2 Retrieving results
+
+With a query object, we can retrieve information from the GDC. The most basic type of results is a simple `count()` of records that satisfy the filter criteria.
+
+***Note***: We haven't set any filters so a `count()` here will represent all the project records publicly available in the GDC "default" archive.
+
+```{r}
+pcount = count(pquery)
+# or
+pcount = pquery %>% count()
+pcount
+```
+
+The `results()` method will fetch actual results:
+
+```{r}
+presults = pquery %>% results()
+str(presults)
+```
+
+A default of only 10 records are returned. You can use `size` and `from` arguments to `results()` to either page through results or to change the number of results. `results_all()` will simply fetch all the available results given a query. ***NOTE***: this may take a long time and return a ***huge*** results set if not used carefully. Use a combination of `counts()` and `results()` to estimate data size before using `results_all()`.
+
+```{r}
+length(ids(presults))
+```
+
+```{r}
+presults = pquery %>% results_all()
+length(ids(presults))
+```
+
+```{r}
+# includes all records
+length(ids(presults)) == count(pquery)
+```
+
+### 4.1.3 Fields and values
+
+Central to querying and retrieving data is the ability to specify which fields to return, filtering by fields and values, and faceting or aggregating. The `GenomicDataCommons` package has two simple functions, `available_fields()` and `default_fields()`. Each can operate on a character endpoint name ("cases", "files", "annotations", or "projects") or a `GDCQuery` object
+
+```{r}
+default_fields("files")
+```
+
+The number of fields ***available*** for the "files" endpoint:
+
+```{r}
+length(available_fields("files"))
+```
+
+The first few fields available for the "files" endpoint:
+
+```{r}
+head(available_fields("files"))
+```
+
+The fields returned by a query can be specified following a similar paradigm to that of the `dplyr` package. The `select()` function is a verb that resets the fields slot of a `GDCQuery`. ***NOTE*** that this is not quite analagous to the dplyr `select()` verb that limits from already-present fields. We *completely* replace the fields when using `select()` on a `GDCQuery`.
+
+```{r}
+# default fields here
+qcases = cases()
+qcases$fields
+```
+
+Set up query to use *all* available fields. ***Note*** that checking of fields is done by `select()`.
+
+```{r}
+qcases = cases() %>% GenomicDataCommons::select(available_fields("cases"))
+head(qcases$fields)
+```
+
+### 4.1.4 Facets and aggregation
+
+GDC API aggregation feature: specify one or more fields (of appropriate type) and return a count of the number of records matching each potential value (similar to the R `table()` function). Multiple fields can be returned at once, but the GDC API foes not have a cross-tabulation feature - all aggregations are only on one field at a time. 
+
+Results of `aggregation()` calls come back as a list of tibbles.
+
+```{r}
+# total number of files of a specific type
+res = files() %>% 
+	facet(c("type", "data_type")) %>% 
+	aggregations()
+res$type
+```
+
+`aggregations()` is an easy way to learn the contents of individual fields and forms the basis for faceted search pages.
+
+### 4.1.5 Filtering
+
+The GenomicDataCommons package uses a form of non-standard evaluation to specify R-like queries that are then translated into an R list. That R list is, upon calling a method that fetches results from the GDC API, translated into the appropriate JSON string. The R expression uses the formula interface as suggested by Hadley Wickham in his [vignette on non-standard evaluation](http://adv-r.had.co.nz/Computing-on-the-language.html).
+
+```{r}
+qfiles = files()
+qfiles %>% count() # all files
+```
+
+To limit the file type, we can refer back to the section on faceting to see the possible values for the field "type". For example, to filter file results to only "gene_expression" files, we simply specify a filter:
+
+```{r}
+qfiles = files() %>% 
+	filter(type == "gene_expression")
+# here is what the filter looks like after translation
+str(get_filter(qfiles))
+qfiles$filters$content
+```
+
