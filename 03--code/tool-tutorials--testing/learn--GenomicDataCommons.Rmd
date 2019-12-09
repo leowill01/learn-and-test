@@ -11,6 +11,7 @@ This tutorial is adapted from the instructional document [***The `GenomicDataCom
 
 ```{r setup, results='hide'}
 library(GenomicDataCommons)
+# library(tidyverse)
 ```
 
 # 1 What is the GDC?
@@ -213,9 +214,10 @@ Results of `aggregation()` calls come back as a list of tibbles.
 ```{r}
 # total number of files of a specific type
 res = files() %>% 
-	facet(c("type", "data_type")) %>% 
+	facet(c("type", "data_type")) %>% # names of fields to facet by
 	aggregations()
 res$type
+res$data_type
 ```
 
 `aggregations()` is an easy way to learn the contents of individual fields and forms the basis for faceted search pages.
@@ -225,17 +227,84 @@ res$type
 The GenomicDataCommons package uses a form of non-standard evaluation to specify R-like queries that are then translated into an R list. That R list is, upon calling a method that fetches results from the GDC API, translated into the appropriate JSON string. The R expression uses the formula interface as suggested by Hadley Wickham in his [vignette on non-standard evaluation](http://adv-r.had.co.nz/Computing-on-the-language.html).
 
 ```{r}
+# count all projects in the GDC
+qprojects = projects() 
+qprojects %>% count()
+
+# count all cases in the GDC
+qcases = cases() 
+qcases %>% count()
+
+# count all files in the GDC
 qfiles = files()
-qfiles %>% count() # all files
+qfiles %>% count()
 ```
 
 To limit the file type, we can refer back to the section on faceting to see the possible values for the field "type". For example, to filter file results to only "gene_expression" files, we simply specify a filter:
 
 ```{r}
 qfiles = files() %>% 
-	filter(type == "gene_expression")
+	GenomicDataCommons::filter(type == "gene_expression")
 # here is what the filter looks like after translation
 str(get_filter(qfiles))
 qfiles$filters$content
 ```
 
+What if we want to create a filter based on e.g. the project 'TCGA-OVCA'? There are a few possible ways.
+
+The first is based on R functionality with some intuition:
+
+```{r}
+grep(pattern = "pro", 
+	 x = available_fields("files"), 
+	 value = T) %>% 
+	head()
+```
+
+Interestingly, project information is nested inside the case. We don't need to know that detail other than to know that we now have a few potential guesses for where our information might be in the files records. We need to know where because we need to construct the appropriate filter.
+
+```{r}
+# grep("project", available_fields("files"), value = T)
+
+# see how many files are in each project
+files() %>% 
+	facet("cases.project.project_id") %>% 
+	aggregations() %>% 
+	head()
+```
+
+The `cases.projects.project_id` looks like it is a good fit. Also **note** that `TCGA-OV` is the correct `project_id`, not `TCGA-OVCA`. ***NOTE*** unlike dplyr, theh `filter()` function ***replaces*** the filter - it doesn't build on top of it.
+
+```{r}
+# add some filters
+qfiles = files() %>% 
+	GenomicDataCommons::filter(cases.project.project_id == "TCGA-OV" &
+							   	type == "gene_expression")
+# show the filters
+str(get_filter(qfiles))
+```
+
+```{r}
+# count how man files in the filtered object
+qfiles %>% GenomicDataCommons::count()
+```
+
+Filters can be chained/nested. This is equivalent to the `&` filtering above:
+
+```{r}
+qfiles2 = files() %>% 
+	filter(cases.project.project_id == "TCGA-OV") %>% 
+	filter(type == "gene_expression")
+qfiles2 %>% count()
+
+(qfiles %>% count()) == (qfiles2 %>% count())
+```
+
+Generating a manifest for bulk downloads is as simple as asking for the manifest from the current query:
+
+```{r}
+manifest_df = qfiles %>% manifest()
+head(manifest_df)
+```
+
+**Note** you might still not be there -- looking at filenames, there are suspiciously named files that might include "FPKM", "FPKM-UQ", or "counts". Another round of `grep()` and `available_fields()` looking for "type" turned up that the field "analysis.workflow_type" has the appropriate filter criteria.
