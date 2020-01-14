@@ -110,7 +110,7 @@ In addition to fetching results, the GDC API allows faceting/aggregating, which 
 
 ### 4.1.1 Creating a query
 
-Queries start in R and follow the four metadata endpoints available at the GDC:
+Queries start in R and follow the four metadata ***endpoints*** available at the GDC (i.e. your query should be what you eventually want to retrieve, e.g. if you want to input case IDs and retrieve Varscan2 variant files, use a `files()` query):
 
 - `projects()`
 - `cases()`
