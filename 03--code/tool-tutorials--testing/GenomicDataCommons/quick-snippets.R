@@ -1,6 +1,18 @@
+# snippets for GenomicDataCommons R package
+
 default_fields("files")
-grep(pattern = "id", x = available_fields("files"), value = T)
-available_values(entity = "files", field = "analysis.workflow_type")
+default_fields("cases")
+default_fields("projects")
+default_fields("annotations")
+
+available_fields("files")
+available_fields("cases")
+available_fields("projects")
+available_fields("annotations")
+
+grep(pattern = "analysis", x = available_fields("files"), value = T) # projects, cases, files, annotations
+
+available_values(entity = "files", field = "analysis.analysis_type")
 
 files() %>% 
 	filter(~ program.name == "TCGA" & 
