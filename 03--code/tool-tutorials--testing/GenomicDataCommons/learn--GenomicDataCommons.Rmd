@@ -2,7 +2,7 @@
 title: "Learn: package `GenomicDataCommons`"
 author: "Leo Williams"
 params:
-  GDC_TOKEN_FILE: "/Users/leo/Downloads/gdc-user-token.2019-11-26T21_38_34.897Z.txt"
+  GDC_TOKEN_FILE: "/Volumes/Pursell-Lab-HD/Pursell-lab/raw-data-master-repository/02--raw-data--external/NIH-GDC/gdc-user-token.2020-01-14T20_42_09.601Z.txt"
 ---
 
 # About
@@ -13,7 +13,7 @@ This tutorial is adapted from the instructional document [***The `GenomicDataCom
 
 ```{r setup, results='hide'}
 library(GenomicDataCommons)
-library(ggplot2)
+library(tidyverse)
 
 # Set params
 Sys.setenv(GDC_TOKEN_FILE = params$GDC_TOKEN_FILE) # Needs to be an environment variable to be read by gdc_token()
