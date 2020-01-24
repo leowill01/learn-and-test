@@ -10,9 +10,9 @@ available_fields("cases")
 available_fields("projects")
 available_fields("annotations")
 
-grep(pattern = "analysis", x = available_fields("files"), value = T) # projects, cases, files, annotations
+grep(pattern = "workflow", x = available_fields("files"), value = T) # projects, cases, files, annotations
 
-available_values(entity = "files", field = "analysis.analysis_type")
+available_values(entity = "files", field = "analysis.workflow_type")
 
 files() %>% 
 	filter(~ program.name == "TCGA" & 
