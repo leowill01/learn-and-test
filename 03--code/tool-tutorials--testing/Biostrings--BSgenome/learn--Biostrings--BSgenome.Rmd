@@ -1,14 +1,11 @@
 ---
-title: 'Learn: Biostrings'
+title: 'Learn: Biostrings & BSgenome R Packages'
+author: 'Leo Williams'
+date: |
+  | Created: October 2, 2019
 output:
-  html_notebook:
-    theme: "darkly"
-    toc: true
-    toc_float:
-      collapsed: false
-    number_sections: true
-  pdf_document:
-    toc: true
+  pdf_document: default
+  html_notebook: default
 ---
 <!-- params: -->
 
@@ -31,7 +28,7 @@ library(tidyverse)
 library(knitr)
 library(Biostrings)
 library(BSgenome)
-library(BSgenome.Celegans.UCSC.ce2)
+library(BSgenome.Celegans.UCSC.ce11)
 
 
 # Set working directory
@@ -128,7 +125,13 @@ Base frequency table with `alphabetFrequency()`
 dna_letters = alphabetFrequency(dna, baseOnly=T)
 dna_letters
 str(dna_letters)
-barplot(dna_letters[1:4])
+# barplot(dna_letters[1:4])
+as_tibble(dna_letters[1:4], rownames = "base") %>% 
+	ggplot(aes(base, value, fill = base)) + 
+	geom_col(color = "black") + 
+	ylim(c(0, 10)) +
+	theme_classic() + 
+	scale_fill_manual(values = c("#6D9DC5", "#E07A5F", "#81D460", "#F2DC5D"))
 ```
 
 Character translation with `chartr()`
@@ -217,32 +220,39 @@ Load *C. elegans* genome
 
 ```{r}
 # Use to learn how to install a new genome
-?available.genomes
+available.genomes() %>% 
+	head()
+
+# search for a new genome with grep
+grep(pattern = "ele", x = available.genomes(), value = T)
+
 # Install genome 
-# BioManager::install(BSgenome.Celegans.UCSC.ce2)
+# BiocManager::install("")
+
 # See which genomes are installed
 installed.genomes()
+
 # Assign genome to variable
-genome_cel = BSgenome.Celegans.UCSC.ce2
-genome_cel
+genome_ce = BSgenome.Celegans.UCSC.ce11
+genome_ce
 ```
 
 Check class of the genome
 
 ```{r}
-class(genome_cel)
+class(genome_ce)
 ```
 
 
 ```{r}
 # Show the genome organism with `organism()`
-organism(genome_cel)
+organism(genome_ce)
 # Get the genome provider with `provider()`
-provider(genome_cel)
+provider(genome_ce)
 # Get the provider version
-providerVersion(genome_cel)
+providerVersion(genome_ce)
 # Get the sequence names
-seqnames(genome_cel)
+seqnames(genome_ce)
 # For a complete list of accessor methods, see `?BSgenome`
 ```
 
@@ -250,15 +260,17 @@ Display chromosome 1. Almost never need reverse complement because everything sh
 
 ```{r}
 # Fwd strand (default)
-genome_cel$chrI
+genome_ce$chrI
+
+genome_ce@single_sequences$chrI
 # Rev strand
-reverseComplement(genome_cel$chrI)
+reverseComplement(genome_ce$chrI)
 ```
 
 Retrieve the number of bases
 
 ```{r}
-chr1 = genome_cel$chrI
+chr1 = genome_ce$chrI
 length(chr1)
 ```
 
