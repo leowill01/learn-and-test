@@ -10,9 +10,10 @@ available_fields("cases")
 available_fields("projects")
 available_fields("annotations")
 
-grep(pattern = "workflow", x = available_fields("files"), value = T) # projects, cases, files, annotations
+grep(pattern = "acl", x = available_fields("files"), value = T) # projects, cases, files, annotations
 
-available_values(entity = "files", field = "analysis.workflow_type")
+available_values(entity = "files", field = "analysis.workflow_type") %>%
+	grep(pattern = "VarScan2", ignore.case = T, value = T)
 
 files() %>% 
 	filter(~ program.name == "TCGA" & 
@@ -33,3 +34,11 @@ for (i in 1:length(q_files_uuid$cases)) {
 	fileID_caseID_table[i, "file_UUID"] = q_files_uuid$file_id[i]
 	fileID_caseID_table[i, "TCGA_case_ID"] = q_files_uuid$cases[[i]][[1]]
 }
+
+files() %>%
+	GenomicDataCommons::select(c(
+		"cases.submitter_id",
+		"file_id",
+		"analysis.workflow_type",
+		files()$fields
+	))
