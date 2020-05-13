@@ -1,0 +1,22 @@
+---
+title: 'Tool testing: TCGAbiolinks R package'
+output: html_notebook
+---
+
+Adapted from the tutorial links at the [Bioconductor page for TCGAbiolinks.](http://bioconductor.org/packages/release/bioc/html/TCGAbiolinks.html)
+
+```{r setup}
+library(tidyverse)
+library(TCGAbiolinks)
+```
+
+
+# 1. Introduction
+
+# 2. Searching GDC database
+[link](http://bioconductor.org/packages/release/bioc/vignettes/TCGAbiolinks/inst/doc/query.html)
+
+## Useful information
+
+## Searching arguments
+
