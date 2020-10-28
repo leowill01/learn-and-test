@@ -8,7 +8,6 @@ library(tidyverse)
 library(cowplot)
 ```
 
-
 ```{r}
 test = data.frame(sample = paste0("sample", 1:100), 
 				  tumor = rep(c("breast", "lung", "bladder", "colorectal", "prostate"), 20),
@@ -41,7 +40,7 @@ h1 = ggplot(test) +
 		  axis.title.x = element_blank(), 
 		  strip.background.x = element_blank(), 
 		  strip.text.x = element_blank()) +
-	facet_grid(.~tumor, scales = "free_x")
+	facet_grid(. ~ tumor, scales = "free_x")
 
 h1
 ```
@@ -69,4 +68,3 @@ h2 = h2 + theme(legend.position = "none")
 plot = plot_grid(h2, h1, align = "v", ncol = 1, axis = "tb", rel_heights = c(0.5, 15))
 plot_grid(plot, legend, nrow = 1, rel_widths = c(10, 1.5))
 ```
-

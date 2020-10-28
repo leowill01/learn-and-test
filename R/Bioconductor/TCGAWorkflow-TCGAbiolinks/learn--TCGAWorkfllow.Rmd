@@ -1,0 +1,62 @@
+---
+title: 'Learn R packge TCGAWorkflow'
+author: 'Leo Williams'
+output: html_notebook
+---
+
+# ABOUT
+
+This notebook is for learning the R Bioconductor package `TCGAWorkflow`. It follows the vigntte [TCGA Workflow: Analyze cancer genomics and epigenomics data using Bioconductor packages](https://www.bioconductor.org/packages/release/workflows/vignettes/TCGAWorkflow/inst/doc/TCGAWorkflow.html) from the package [webpage](https://www.bioconductor.org/packages/release/workflows/html/TCGAWorkflow.html).
+
+Data used is from the package `TCGAWorkflowData`.
+
+# SETUP
+
+Load packages and set options:
+
+```{r setup, message=FALSE}
+library(TCGAbiolinks)
+library(TCGAWorkflowData)
+library(DT)
+library(tidyverse)
+```
+
+# INTRODUCTION
+
+# METHODS
+
+## Access to the data
+
+### Downloading data from TCGA data portal
+
+`TCGAbiolinks` has 3 main functions:
+
+-   `GDCquery()`
+-   `GDCdownload()`
+-   `GDCprepare()`
+
+**`GDCquery()`** uses GDC API to search the data for a given project and data category and filters results by features requested. Returns a summary table. Most important args are `peoject`, `data.category`, `data.type`, `workflow.type`, `legacy`, `file.type`, and `platform`. A complete list of possible arguments can be found in the [`TCGAbiolinks` vignette](https://www.bioconductor.org/packages/3.3/bioc/vignettes/TCGAbiolinks/inst/doc/tcgaBiolinks.html#harmonized-data-1).
+
+**`GDCdownload()`** is used to download the data, or the `gdc-client` can be used. The downloaded data will be saved in a dir with the project name and a subfolder with the `data.cetegory`.
+
+**`GDCprepare()`** transforms downloaded data into a `summarizedExperiment` object or a data frame. If `SummarizedExperiment = TRUE`, TCGAbiolinks will add to the object sub-type information (defined by TCGA) and clinical information.
+
+```{r query-data}
+# query GDC for data
+query_met_gbm = GDCquery(project = "TCGA-GBM", 
+						 legacy = TRUE,
+						 data.category = "DNA methylation",
+						 platform = "Illumina Human Methylation 450", 
+						 barcode = c("TCGA-76-4926-01B-01D-1481-05", "TCGA-28-5211-01C-11D-1844-05"))
+glimpse(query_met_gbm$results[[1]])
+```
+
+```{r download-data}
+# download data from GDC
+GDCdownload(query_met_gbm)
+```
+
+
+# TO-DO
+
+-   [x] ~~can you only search one project at a time? -- no, you can search all, but every project included must *have* the type of data being requested (e.g.: "Error in checkDataCategoriesInput(project, data.category, legacy) : Please set a valid data.category argument from the column data_category above. We could not validade the data.category for project GENIE-MSK")~~

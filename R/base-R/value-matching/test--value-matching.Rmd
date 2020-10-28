@@ -1,5 +1,6 @@
 ---
-title: "key-value replacement"
+title: 'Test: key-value replacement'
+author: 'Leo Williams'
 output: html_notebook
 ---
 
@@ -21,7 +22,8 @@ orig
 # Make example key:value table
 
 ```{r}
-key_val = data.frame(gene_symbol=c("C", "D", "A", "B"), entrez_id=c("83372", "91101", "30121", "590"))
+key_val = data.frame(gene_symbol = c("C", "D", "A", "B"), 
+					 entrez_id = c("83372", "91101", "30121", "590"))
 key_val
 ```
 
@@ -30,9 +32,15 @@ key_val
 ```{r}
 orig
 key_val
-match(orig$gene_symbol, key_val$gene_symbol)
-key_val[match(orig$gene_symbol, key_val$gene_symbol), "entrez_id"]
-orig$entrez_id = key_val[match(orig$gene_symbol, key_val$gene_symbol), "entrez_id"]
+match(orig$gene_symbol, 
+	  key_val$gene_symbol)
+
+key_val[match(orig$gene_symbol, 
+			  key_val$gene_symbol), 
+		"entrez_id"]
+orig$entrez_id = key_val[match(orig$gene_symbol, 
+							   key_val$gene_symbol), 
+						 "entrez_id"]
 orig = orig %>% 
 	select(entrez_id, result)
 orig
