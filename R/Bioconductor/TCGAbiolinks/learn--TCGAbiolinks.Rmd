@@ -6,13 +6,85 @@ output: html_notebook
 
 # ABOUT
 
-This notebook is for learning the R Bioconductor package `TCGAbiolinks`. It follows the vignette [title] from the package's [webpage](https://bioconductor.org/packages/release/bioc/html/TCGAbiolinks.html).
-
-Data used is from the package `TCGAWorkflowData`.
+This notebook is for learning the R Bioconductor package `TCGAbiolinks`. It follows the vignettes from the package's [webpage](https://bioconductor.org/packages/release/bioc/html/TCGAbiolinks.html).
 
 # SETUP
 
-```{r setup, message=FALSE}
+Download required libraries
 
+```{r setup, message=FALSE}
+library(TCGAbiolinks)
+library(dplyr)
+library(DT)
 ```
 
+# INTRODUCTION
+
+[Vignette](https://bioconductor.org/packages/release/bioc/vignettes/TCGAbiolinks/inst/doc/index.html)
+
+# DATA: QUERY
+
+Vignette: [TCGAbiolinks: Searching GDC database](https://bioconductor.org/packages/release/bioc/vignettes/TCGAbiolinks/inst/doc/query.html)
+
+## Searching arguments
+
+You can easily search GDC data using the `GDCquery()` function. The function has the following arguments:
+
+-   `data.category`: must be a type listed in `TCGAbiolinks::getProjectSummary(project)`
+-   `data.type`
+-   `workflow.type`
+-   `legacy`
+-   `access`
+-   `platform`
+-   `file.type`
+-   `barcode`
+-   `experimental.strategy`
+-   `sample.type`
+
+For the most part, the arguments mimic what can be found while browsing the web interface for the GDC data portal.
+
+## Harmonized database examples
+
+### DNA methylation data: Recurrent tumor samples
+
+This example accesses the harmonized database (`legacy = FALSE`) and searches for all DNA methylation data for recurrent glioblastoma multiforme (GBM) and low grade gliomas (LGG):
+
+```{r eg-dna-methylation}
+# query for data
+query_gbm_lgg = GDCquery(project = c("TCGA-GBM", "TCGA-LGG"), 
+				 data.category = "DNA Methylation", 
+				 legacy = F, 
+				 platform = "Illumina Human Methylation 450", 
+				 sample.type = "Recurrent Tumor")
+
+# get results
+query_gbm_lgg_res = getResults(query_gbm_lgg) ; query_gbm_lgg_res
+
+# # convert to datatable
+# datatable(query_gbm_lgg_res, 
+# 		  filter = "top", 
+# 		  options = list(
+# 		  	scrollX = T,
+# 		  	keys = T,
+# 		  	pageLength = 5
+# 		  ), 
+# 		  rownames = F)
+```
+
+# STOPPED: CANT FIGURE OUT HOW TO GET TISSUE PRIMARY SITE - BACK TO USING `GenomicDataCommons` FOR NOW
+
+<!-- ### Samples with DNA methylation and gene expression data -->
+
+<!-- This example accesses the harmonized database and searches for all patients with DNA methylation and gene expression data for colon adenocarcinoma: -->
+
+<!-- ```{r methyl-genex-coad} -->
+
+<!-- interse -->
+
+<!-- ``` -->
+
+# SESSION INFO
+
+```{r session-info}
+sessionInfo()
+```
