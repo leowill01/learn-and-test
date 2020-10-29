@@ -41,19 +41,68 @@ library(tidyverse)
 
 **`GDCprepare()`** transforms downloaded data into a `summarizedExperiment` object or a data frame. If `SummarizedExperiment = TRUE`, TCGAbiolinks will add to the object sub-type information (defined by TCGA) and clinical information.
 
-```{r query-data}
-# query GDC for data
-query_met_gbm = GDCquery(project = "TCGA-GBM", 
-						 legacy = TRUE,
-						 data.category = "DNA methylation",
-						 platform = "Illumina Human Methylation 450", 
-						 barcode = c("TCGA-76-4926-01B-01D-1481-05", "TCGA-28-5211-01C-11D-1844-05"))
-glimpse(query_met_gbm$results[[1]])
+```{r query-and-download-data}
+# Obs: The data in the legacy database has been aligned to hg19
+query.met.gbm <- GDCquery(project = "TCGA-GBM", 
+                          legacy = TRUE,
+                          data.category = "DNA methylation",
+                          platform = "Illumina Human Methylation 450", 
+                          barcode = c("TCGA-76-4926-01B-01D-1481-05", "TCGA-28-5211-01C-11D-1844-05"))
+GDCdownload(query.met.gbm)
+
+met.gbm.450 <- GDCprepare(query = query.met.gbm,
+                          save = TRUE, 
+                          save.filename = "gbmDNAmet450k.rda",
+                          summarizedExperiment = TRUE)
+
+query.met.lgg <- GDCquery(project = "TCGA-LGG", 
+                          legacy = TRUE,
+                          data.category = "DNA methylation",
+                          platform = "Illumina Human Methylation 450",
+                          barcode = c("TCGA-HT-7879-01A-11D-2399-05", "TCGA-HT-8113-01A-11D-2399-05"))
+GDCdownload(query.met.lgg)
+met.lgg.450 <- GDCprepare(query = query.met.lgg,
+                          save = TRUE, 
+                          save.filename = "lggDNAmet450k.rda",
+                          summarizedExperiment = TRUE)
+met.gbm.lgg <- SummarizedExperiment::cbind(met.lgg.450, met.gbm.450)
+
+
+query.exp.lgg <- GDCquery(project = "TCGA-LGG", 
+                          legacy = TRUE,
+                          data.category = "Gene expression",
+                          data.type = "Gene expression quantification",
+                          platform = "Illumina HiSeq", 
+                          file.type = "results",
+                          sample.type = "Primary solid Tumor")
+GDCdownload(query.exp.lgg)
+exp.lgg <- GDCprepare(query = query.exp.lgg, save = TRUE, save.filename = "lggExp.rda")
+
+query.exp.gbm <- GDCquery(project = "TCGA-GBM", 
+                          legacy = TRUE,
+                          data.category = "Gene expression",
+                          data.type = "Gene expression quantification",
+                          platform = "Illumina HiSeq", 
+                          file.type = "results",
+                          sample.type = "Primary solid Tumor")
+GDCdownload(query.exp.gbm)
+exp.gbm <- GDCprepare(query = query.exp.gbm, save = TRUE, save.filename = "gbmExp.rda")
+exp.gbm.lgg <- SummarizedExperiment::cbind(exp.lgg, exp.gbm)
 ```
 
-```{r download-data}
-# download data from GDC
-GDCdownload(query_met_gbm)
+# TEST
+
+Query GDC for annotated Varscan VCFs for CRC and UCEC tumors:
+```{r query-CRC-UCEC}
+# FIXME: does not return case ID
+query_snv_crc_ucec = GDCquery(project = c("TCGA-COAD", 
+										  "TCGA-READ", 
+										  "TCGA-UCEC"), 
+							  data.category = "Simple Nucleotide Variation", 
+							  data.type = "Annotated Somatic Mutation", 
+							  workflow.type = "VarScan2 Annotation", 
+							  data.format = "VCF")
+
 ```
 
 
