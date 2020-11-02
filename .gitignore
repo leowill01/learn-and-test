@@ -1,5 +1,6 @@
 # directories
-*data/
+02--data
+04--analysis
 
 # filetypes
 .Rproj.user
