@@ -1,0 +1,8 @@
+# directories
+*data/
+
+# filetypes
+.Rproj.user
+*.Rproj
+*.rda
+.Rhistory
