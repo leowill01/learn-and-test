@@ -1,0 +1,60 @@
+---
+title: "Test: unnest nested lists"
+output: html_notebook
+---
+
+Adapted from [Converting a nested list into dataframe - Data Transformation Exercise in R](https://www.youtube.com/watch?v=G-DibEPIh_s)
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(data.table)
+```
+
+```{r make-data}
+f = list(
+	list(NA, "false", "5"), 
+	list(NA, "false", "3")
+)
+```
+
+```{r view list str}
+str(f)
+```
+
+Can we use rbind or rbindlist?
+
+```{r rbind}
+do.call(rbind, f) %>%
+	as.data.table()
+
+do.call(rbind, f) %>%
+	as.data.frame()
+
+rbindlist(f) # returns df
+```
+
+For a list of data frames
+```{r make list of dfs}
+g = list(
+	data.frame(
+		a = NA, 
+		b = "false", 
+		c = "5"
+	), 
+	data.frame(
+		a = NA, 
+		b = "false", 
+		c = "3"
+	)
+)
+glimpse(g)
+```
+
+can we again use `rbind` or `rbindlist`?
+
+```{r rbind again}
+do.call(rbind, g) # makes df
+
+rbindlist(g) # makes df
+```
+
