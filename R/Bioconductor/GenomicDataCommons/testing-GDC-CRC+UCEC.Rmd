@@ -1,0 +1,49 @@
+---
+title: "Testing `GenomicDataCommons` for POLE samples"
+---
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(GenomicDataCommons)
+```
+
+```{r field search}
+# available_fields("files")
+
+default_fields("files")
+
+grep_fields(entity = "files", pattern = "project")
+
+available_values(entity = "files", field = "analysis.workflow_type")
+```
+
+
+```{r test-query}
+qfiles = files() %>%
+	filter(~ cases.project.project_id %in% c("TCGA-UCEC", "TCGA-COAD", "TCGA-READ") & 
+		   	data_type == "Annotated Somatic Mutation" &
+		   	analysis.workflow_type == "VarScan2 Annotation") %>%
+	select(c(
+		"data_category",
+		"submitter_id",
+		"experimental_strategy",
+		"msi_score",
+		"data_format",
+		"file_name"
+	))
+qfiles %>%
+	count()
+```
+
+```{r get query results}
+res_qfiles = qfiles %>%
+	results_all()
+res_qfiles_tib = res_qfiles %>% 
+	as_tibble()
+```
+
+
+```{r expand results}
+
+```
+
