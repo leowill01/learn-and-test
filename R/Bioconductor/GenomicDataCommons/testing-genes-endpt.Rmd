@@ -1,0 +1,42 @@
+```{r}
+grep_fields("files", "symbol")
+```
+
+```{r}
+cases() %>%
+	GenomicDataCommons::filter(follow_ups.molecular_tests.gene_symbol == "POLE") %>%
+	GenomicDataCommons::count()
+```
+
+```{r}
+available_fields("genes")
+available_values(entity = "genes", 
+				 field = "symbol", )
+```
+
+```{r}
+genes() %>%
+	# filter(symbol == "pole") %>%
+	# select(c("case.submitter_id")) %>%
+	results_all()
+```
+
+```{r}
+all_genes = genes() %>% 
+	results_all()
+```
+
+```{r}
+available_expand("files")
+```
+
+```{r}
+grep_fields("files", "data")
+
+files() %>%
+	filter(~ cases.project.project_id == "TCGA-GBM" &
+		   	data_type == "Gene Expression Quantification") %>%
+	facet("analysis.workflow_type") %>%
+	aggregations()
+```
+
