@@ -1,0 +1,54 @@
+---
+title: |
+  Quick wint in R: Correlation
+  OMGenomics
+output: html_notebook
+---
+
+# ABOUT
+
+Adapted from OMGenomics https://www.youtube.com/watch?v=yAbD-nifJaw&list=WL&index=3
+
+# SETUP
+```{r setup, message=FALSE}
+library(tidyverse)
+```
+
+# LOAD DATA
+
+Load `mtcars` dataset as a data frame:
+```{r load data}
+glimpse(df_mtcars)
+```
+
+# ANALYSIS
+
+Plot scatterplot for HP vs MPG
+```{r plot data}
+mtcars %>%
+	ggplot(aes(x = mpg, y = hp)) +
+	geom_point() +
+	geom_smooth(method = "lm")
+```
+
+
+Calculate the correlation
+```{r cor}
+r = cor(mtcars$mpg, mtcars$hp); r
+r2 = r^2; r2
+```
+
+Test for significants of correlation:
+```{r cor test}
+test_cor <- cor.test(mtcars$mpg, mtcars$hp); test_cor
+```
+
+Inspect the correlation test:
+```{r inspect cor}
+attributes(test_cor)
+str(test_cor)
+test_cor$p.value
+test_cor$estimate # r value
+test_cor$estimate^2 # r squared value - SAME as with just cor()
+```
+
