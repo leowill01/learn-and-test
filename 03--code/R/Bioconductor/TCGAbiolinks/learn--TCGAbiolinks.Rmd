@@ -27,10 +27,29 @@ TCGAbiolinks is able to access The National Cancer Institute (NCI) Genomic Data 
 
 # 2. SEARCHING GDC DATABASE
 
+## Useful information
+
 Vignette: [TCGAbiolinks: Searching GDC database](https://bioconductor.org/packages/release/bioc/vignettes/TCGAbiolinks/inst/doc/query.html)
 
 There are 2 available sources to download GDC data using `TCGAbiolinks`:
 
 - GDC Legacy Archive
 - GDC harmonized database
+
+Information on understanding TCGA barcodes: [GDC TCGA barcodes](https://docs.gdc.cancer.gov/Encyclopedia/pages/TCGA_Barcode/)
+
+## Searching arguments
+
+Search *through* GDC data with the `GDCquery()` function. The function works well with the ***following*** arguments:
+
+- `data.category`: valid project
+
+```{r view projects}
+# view available projects
+gdc_projects = getGDCprojects()
+gdc_projects %>% glimpse()
+
+# view project information
+TCGAbiolinks:::getProjectSummary("TCGA-READ")
+```
 
