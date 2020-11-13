@@ -7,3 +7,5 @@
 *.Rproj
 *.rda
 .Rhistory
+*.nb.html
+.DS_Store
