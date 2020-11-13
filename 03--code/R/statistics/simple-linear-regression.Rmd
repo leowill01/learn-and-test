@@ -1,0 +1,60 @@
+---
+title: |
+  Quick wins in R 3: Linear regression
+  OMGenomics
+author: "Leo Williams"
+---
+
+# ABOUT
+
+Adapted from [Quick Wins in R 3: Linear Regression](https://www.youtube.com/watch?v=fWl9HC1caHI&list=WL&index=3)
+
+# SETUP
+
+```{r setup, message = F}
+library(tidyverse)
+```
+
+# LOAD DATA
+
+Use `mtcars` as example data
+```{r load data}
+head(mtcars)
+```
+
+# ANALYSIS
+
+## LINEAR REGRESSION
+
+Formulate: `fit <- lm(y ~ x1 + x2 + x3, data = my_data)`
+Run a linear regression of `mpg` (y) explained by `wt` (x):
+```{r slr}
+fit_mpg_vs_wt = lm(mpg ~ wt, data = mtcars)
+fit_mpg_vs_wt
+```
+
+View model summary:
+```{r summarize model}
+summary(fit_mpg_vs_wt)
+```
+
+
+Inspect individual model coefficients:
+```{r inspect model}
+fit_mpg_vs_wt$coefficients[1] # y int
+fit_mpg_vs_wt$coefficients[2] # slope
+```
+
+Plot the regression line:
+```{r plot slr}
+mtcars %>%
+	ggplot(aes(x = wt, y = mpg)) +
+	geom_point() +
+	geom_smooth(method = "lm", size = 3) +
+	# manually plot coefficients
+	geom_abline(slope = fit_mpg_vs_wt$coefficients[2], 
+				intercept = fit_mpg_vs_wt$coefficients[1], 
+				color = "red", size = 0.5) + 
+	theme_classic()
+```
+
