@@ -338,4 +338,151 @@ else:
 	print("You are not male and not tall")
 
 # IF STATEMENTS & COMPARISONS ################
+# using if statements with comparisons
+# %% 
+# function for max number w 3 args
+def max_num(num1, num2, num3):
+	# return the largest of the 3 numbers
+	if num1 >= num2 and num1 >= num3:
+		return num1
+	elif num2 >= num1 and num2 >= num3:
+		return num2
+	else:
+		return num3
+
+print(max_num(54,15,98))
+
+# BUILDING A BETTER CALCULATOR ################
+# to perform all basic arithmetic operations
+# choose 2 numbers and an operator
 # %%
+num1 = float(input("Enter first number: "))
+op = input("Enter operator: ")
+num2 = float(input("Enter second number: "))
+
+if op == "+":
+	print(num1 + num2)
+elif op == "-":
+	print(num1 - num2)
+elif op == "/":
+	print(num1 / num2)
+elif op == "*":
+	print(num1 * num2)
+else:
+	print("Invalid operator")
+
+# DICTIONARIES ################
+# uses key:value pairs. 
+# %% convert 3-digit month name into a full month name
+month_conversions = {
+	'Jan':'January',
+	'Feb':'February',
+	'Mar':'March',
+	'Apr':'April',
+	'May':'May',
+	'Jun':'June',
+	'Jul':'July',
+	'Aug':'August',
+	'Sep':'September',
+	'Oct':'October',
+	'Nov':'November',
+	'Dec':'December',
+}
+# %% access dict
+print(month_conversions['Nov']) # returns full name for November
+print(month_conversions['Mar']) # returns full name for November
+
+print(month_conversions.get("Apr", 'Not a valid key')) # use get method
+print(month_conversions.get("MOOO", 'Not a valid key')) # revert to default string returned
+
+# %% can also use numbers
+dict2 = {
+	1:"January",
+	2:"February",
+}
+
+print(dict2[2]) # February
+
+# WHILE LOOP ################
+# %%
+i = 1
+while i <= 10: # keep looping while condition is true
+	print(str(i) + ' is less than or equal to 10!')
+	i += 1
+print("Done with loop")
+
+# BUILDING A GUESSING GAME ################
+# using different data structures
+# %%
+# set secret word
+secret_word = "giraffe"
+# set users response
+guess = ""
+# need to get continual guesses until it's correct
+while guess != secret_word:
+	guess = input("Enter guess: ")
+
+print("Correct guess!")
+# %% set a limit on the number of guesses
+# set secret word
+secret_word = "giraffe"
+# set users response
+guess = ""
+# keep track of number of guesses
+guess_count = 0
+# set limit for guesses
+guess_limit = 3
+# track if guesses remaining
+out_of_guesses = False
+
+# need to get continual guesses until it's correct
+while guess != secret_word and not(out_of_guesses):
+	if guess_count < guess_limit:
+		guess = input("Enter guess: ")
+		guess_count += 1
+	else:
+		out_of_guesses = True
+	
+if out_of_guesses:
+	print("OUT OF GUESSES! YOU LOSE :( :( :(")
+else:
+	print("YOU WIN!!!")
+
+# FOR LOOP ################
+# loop over collections of items
+# %% loop through letters in a string
+for letter in 'Giraffe Academy':
+	print(letter)
+# %% loop through an array
+friends = ['Jim','Karen','Kevin']
+for friend in friends:
+	print(friend)
+
+# %% range of numbers
+for i in range(10):
+	print(i)
+for i in range(3, 10):
+	print(i)
+
+# %% loop through length of array indices
+for i in range(len(friends)):
+	print(friends[i])
+
+# %% use special logic
+for i in range(5):
+	if i == 0:
+		print("First!")
+	else:
+		print('not first')
+# EXPONENT FUNCTION ################
+# make a function to mimic '**' exponential operator
+# %%
+def raiseToPower(base_num, pow_num):
+	result = 1
+	for i in range(pow_num):
+		result *= base_num
+	return result
+
+print(raiseToPower(4, 160))
+
+# 2D LISTS & NESTED LOOPS ################
