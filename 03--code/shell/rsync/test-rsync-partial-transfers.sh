@@ -213,17 +213,43 @@ dest="/Users/leo/Desktop/work--tmp/01--raw-data--RSYNC-DEST"
 		"$local"/ "$remote"/
 
 # TEST FUZZY MATCHING ################
-	# define test folders
-	local="/Users/leo/Desktop/work--tmp/RSYNC-TEST-LOCAL"
-	remote="/Users/leo/Desktop/work--tmp/RSYNC-TEST-REMOTE"
+	# # define test folders
+	# local="/Users/leo/Desktop/work--tmp/RSYNC-TEST-LOCAL"
+	# remote="/Users/leo/Desktop/work--tmp/RSYNC-TEST-REMOTE"
+	# # setup
+	# touch "$local"/local-file{1..4}.txt
+	# touch "$remote"/remote-file{5..8}.txt
 
-	rsync -avPihm --stats \
-	--exclude='_rsync-backup/' \
-	--exclude='*.bam' `# for testing` \
-	--exclude='01--internal/' `# for testing` \
-	--delete \
-	--backup \
-	--backup-dir="_rsync-backup/_rsync-backup-$(date +%Y-%m-%d-%H%M%S)" \
-	--partial-dir="_rsync-partial" \
-	--log-file="$local_logs_dir"/"$(date +%Y-%m-%d-%H%M%S)-rsync.log" \
-	"$local"/ "$remote"/
+	# # 1st sync local -> remote
+	# rsync -avPihm --stats \
+	# --exclude='_rsync-backup/' \
+	# --exclude='*.bam' `# for testing` \
+	# --exclude='01--internal/' `# for testing` \
+	# --partial-dir="_rsync-partial" \
+	# --delete \
+	# --backup \
+	# --backup-dir="_rsync-backup/_rsync-backup-$(date +%Y-%m-%d-%H%M%S)" \
+	# --log-file="$local_logs_dir"/"$(date +%Y-%m-%d-%H%M%S)-rsync.log" \
+	# "$local"/ "$remote"/
+
+	# # put local files in new folder
+	# mkdir "$local"/moved-files
+	# mv "$local"/local-file{1..4}.txt "$local"/moved-files/
+
+	# # now sync local -> remote again but with fuzzy option to see if it detected the files put in a folder
+	# rsync -avPihm --stats \
+	# --exclude='_rsync-backup/' \
+	# --exclude='*.bam' `# for testing` \
+	# --exclude='01--internal/' `# for testing` \
+	# --fuzzy \
+	# --partial-dir="_rsync-partial" \
+	# --delete \
+	# --backup \
+	# --backup-dir="_rsync-backup/_rsync-backup-$(date +%Y-%m-%d-%H%M%S)" \
+	# --log-file="$local_logs_dir"/"$(date +%Y-%m-%d-%H%M%S)-rsync.log" \
+	# "$local"/ "$remote"/
+
+	# [FINISH LATER - NOT NEEDED NOW]
+
+
+# 
