@@ -37,6 +37,7 @@ dest="/Users/leo/Desktop/work--tmp/01--raw-data--RSYNC-DEST"
 	--prune-empty-dirs \
 	--partial-dir="_rsync-partial"  \
 	"$src"/ "$dest"/
+	# NOTE: pruning does not delete dirs on dest that end up being empty, it simply prevents empty dirs from being copied
 
 # TEST LOGS ################
 	# where does the log file output go from the '--log-file=""' option? from previous experience I think it automatically goes into the dir where the *script* is run from, not from any direction by the rsync command.
@@ -109,7 +110,7 @@ dest="/Users/leo/Desktop/work--tmp/01--raw-data--RSYNC-DEST"
 		# delete newfile from local - it should delete on remote
 		rm "$local"/newfile.txt
 
-		# sync local >> remote
+		# sync local -> remote
 		rsync -avP --stats --itemize-changes --human-readable \
 		--prune-empty-dirs \
 		--delete \
@@ -117,9 +118,9 @@ dest="/Users/leo/Desktop/work--tmp/01--raw-data--RSYNC-DEST"
 		--partial-dir="_rsync-partial" \
 		--log-file="$local_logs_dir"/"$(date +%Y-%m-%d-%H%M%S)-rsync.log" \
 		"$local"/ "$remote"/
-		# with both --delete and --backup on, the "deleted" file is appended with a '~' at the end to signify it is a backup file
+		# with both --delete and --backup on, the "deleted" file is appended with a '~' at the end to signify it is a backup file. so there is no remaining regular file 
 
-		# what happens to the backup .*~ file when you run it again?
+		# what happens to the backup .*~ file when you sync local -> remote again?
 		rsync -avP --stats --itemize-changes --human-readable \
 		--prune-empty-dirs \
 		--delete \
@@ -129,49 +130,67 @@ dest="/Users/leo/Desktop/work--tmp/01--raw-data--RSYNC-DEST"
 		"$local"/ "$remote"/
 		# it stays there. 
 
-		# what happens to remote ~ backup files when you rsync back to local? do the backup files get transferred?
+		# what happens to remote ~ backup files when you remote -> local? do the backup files get transferred?
 		rsync -avP --stats --itemize-changes --human-readable \
 		--prune-empty-dirs \
 		--partial-dir="_rsync-partial" \
 		--log-file="$local_logs_dir"/"$(date +%Y-%m-%d-%H%M%S)-rsync.log" \
 		"$remote"/ "$local"/
-		# YES they do. you need to exclude backup files on remote with an --exclude on local side:
+		# YES they do. 
+
+		# ok so what if you delete the "backup" file on local and sync -> remote: does the remote backup~ file get removed?
+		rm "$local"/newfile.txt~
+		# sync
 		rsync -avP --stats --itemize-changes --human-readable \
 		--prune-empty-dirs \
-		--exclude='*.*~' \
+		--delete \
+		--backup \
+		--partial-dir="_rsync-partial" \
+		--log-file="$local_logs_dir"/"$(date +%Y-%m-%d-%H%M%S)-rsync.log" \
+		"$local"/ "$remote"/
+		# it does NOT get deleted. it seems as long as --backup is on, backup~ files on the remote dont get overwritten even if deleted on local. the backup~ just gets backed up to itself again. logically i'd expect it to append another '~' each time
+		
+		# you need to exclude backup files on remote with an --exclude on local side:
+		rsync -avP --stats --itemize-changes --human-readable \
+		--prune-empty-dirs \
+		--exclude='*~' \
 		--partial-dir="_rsync-partial" \
 		--log-file="$local_logs_dir"/"$(date +%Y-%m-%d-%H%M%S)-rsync.log" \
 		"$remote"/ "$local"/
+		# pattern must be '*~', NOT '.*~' bc that only looks for files that start with '.'
 
 	# test --delete + --backup + --backup-dir
 		# make newfile on remote
 		touch "$remote"/newfile{1..5}.txt
 
-		# sync local <- remote
+		# sync rmeote -> local
 		rsync -avP --stats --itemize-changes --human-readable \
 		--prune-empty-dirs \
+		--exclude='*~' \
 		--partial-dir="_rsync-partial" \
 		--log-file="$local_logs_dir"/"$(date +%Y-%m-%d-%H%M%S)-rsync.log" \
 		"$remote"/ "$local"/
 
-		# delete newfile from local - it should delete on remote
-		rm "$local"/newfile.txt
+		# delete newfile from local - it should delete on remote on next local->remote sync
+		rm "$local"/newfile{1..3}.txt
 
-		# sync local -> remote and use --backup-dir where files get put instead of appending a '~' to the end of the file
+		# sync local -> remote and use --backup-dir where files deleted on local get put on remote instead of appending a '~' to the end of the remote file
 		rsync -avP --stats --itemize-changes --human-readable \
 		--prune-empty-dirs \
+		--exclude='*.bam' \
 		--delete \
 		--backup \
 		--backup-dir="_rsync-backup" \
 		--partial-dir="_rsync-partial" \
 		--log-file="$local_logs_dir"/"$(date +%Y-%m-%d-%H%M%S)-rsync.log" \
 		"$local"/ "$remote"/
-		# this actually keeps backing up the existing '_rsync-backup' into the new '_rsync-backup'. it needs an --exclude to prevent nesting of backup dirs.
+		# repeat command ^: this actually keeps backing up the existing '_rsync-backup' into the new '_rsync-backup'. it needs an --exclude to prevent nesting of backup dirs.
 		
 		# exclude the rsync backup dir on remote to prevent backup dir nesting
 		rsync -avP --stats --itemize-changes --human-readable \
 		--prune-empty-dirs \
 		--exclude='_rsync-backup/' \
+		--exclude='*.bam' `# for testing` \
 		--delete \
 		--backup \
 		--backup-dir="_rsync-backup" \
@@ -179,7 +198,32 @@ dest="/Users/leo/Desktop/work--tmp/01--raw-data--RSYNC-DEST"
 		--log-file="$local_logs_dir"/"$(date +%Y-%m-%d-%H%M%S)-rsync.log" \
 		"$local"/ "$remote"/
 		# this works but doesnt make sense since the backup dir is only on the remote and not being copied from local, but the exclude still acts like it is..? idk
+		# FIXME: do include/exclude rules ... (what was i typing here?)
 
+		# make every backupdir timestamped
+		rsync -avP --stats --itemize-changes --human-readable \
+		--prune-empty-dirs \
+		--exclude='_rsync-backup/' \
+		--exclude='*.bam' `# for testing` \
+		--delete \
+		--backup \
+		--backup-dir="_rsync-backup/_rsync-backup-$(date +%Y-%m-%d-%H%M%S)" \
+		--partial-dir="_rsync-partial" \
+		--log-file="$local_logs_dir"/"$(date +%Y-%m-%d-%H%M%S)-rsync.log" \
+		"$local"/ "$remote"/
 
-	
+# TEST FUZZY MATCHING ################
+	# define test folders
+	local="/Users/leo/Desktop/work--tmp/RSYNC-TEST-LOCAL"
+	remote="/Users/leo/Desktop/work--tmp/RSYNC-TEST-REMOTE"
 
+	rsync -avPihm --stats \
+	--exclude='_rsync-backup/' \
+	--exclude='*.bam' `# for testing` \
+	--exclude='01--internal/' `# for testing` \
+	--delete \
+	--backup \
+	--backup-dir="_rsync-backup/_rsync-backup-$(date +%Y-%m-%d-%H%M%S)" \
+	--partial-dir="_rsync-partial" \
+	--log-file="$local_logs_dir"/"$(date +%Y-%m-%d-%H%M%S)-rsync.log" \
+	"$local"/ "$remote"/
