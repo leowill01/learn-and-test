@@ -9,3 +9,5 @@
 .Rhistory
 *.nb.html
 .DS_Store
+*.log
+*.tex
