@@ -1,0 +1,21 @@
+---
+title: "Learning R package `DataExplorer`"
+author: "Leo Williams"
+---
+
+```{r}
+library(tidyverse)
+library(DataExplorer)
+
+theme_set(
+	theme_classic() +
+		theme(
+			text = element_text(family = "SF Mono", face = "bold")
+		)
+)
+```
+
+```{r}
+create_report(iris)
+```
+

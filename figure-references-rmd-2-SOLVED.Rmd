@@ -1,0 +1,141 @@
+---
+title: "Summary Report"
+subtitle: "Analysis of Galati, et al., 2020 POLE-mutant Mouse Data"
+
+author:
+- Leo Williams:
+    institute: inst1
+    email: lwilli24@tulane.edu
+    correspondence: yes
+institute:
+- inst1: Pursell Lab, Dept. of Biochemistry & Molecular Biology, Tulane University School of Medicine, New Orleans, LA, USA
+
+date: |
+  | 2021 Jan 15
+  | Updated `r Sys.Date()`
+
+#  Updated: \today
+
+# added manually in tex block after YAML header
+toc: false
+link-citations: yes
+colorlinks: yes
+numbersections: yes
+
+header-includes:
+# wrap code blocks using the listings package (run with pandoc command that includes `--listings` command). looks cleaner. but makes highlighting mistakes, e.g. mistakes any '#' symbol as the start of a comment
+- \usepackage{xcolor}
+- \lstset{breaklines=true}
+- \lstset{language=[Motorola68k]Assembler}
+- \lstset{basicstyle=\small\ttfamily}
+- \lstset{extendedchars=true}
+- \lstset{tabsize=2}
+- \lstset{columns=fixed}
+- \lstset{showstringspaces=false}
+- \lstset{frame=trbl}
+- \lstset{frameround=tttt}
+- \lstset{framesep=4pt}
+- \lstset{numbers=left}
+- \lstset{numberstyle=\tiny\ttfamily}
+- \lstset{postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}}}
+- \lstset{commentstyle=\color{red!50!black}}
+- \lstset{keywordstyle=\color{blue!70!black}}
+- \lstset{stringstyle=\color{green!50!black}}
+# prevent floating figures (insert them where they are in the .md file)
+- \usepackage{float}
+- \let\origfigure\figure
+- \let\endorigfigure\endfigure
+- \renewenvironment{figure}[1][2] {\expandafter\origfigure\expandafter[H]}{\endorigfigure}
+
+output:
+  bookdown::pdf_document2:
+    pandoc_args:
+    - "--lua-filter=/Users/leo/Documents/my-documents/00--system/reference-files/scholarly-metadata.lua"
+    - "--lua-filter=/Users/leo/Documents/my-documents/00--system/reference-files/author-info-blocks.lua"
+    - "--citeproc"
+    - "--bibliography=/Users/leo/Documents/my-documents/00--system/reference-files/my-Zotero-library.bib"
+    - "--csl=/Users/leo/Documents/my-documents/00--system/reference-files/ieee.csl"
+    - "--listings"
+    - "--filter=/usr/local/Caskroom/miniconda/base/bin/pandoc-fignos"
+---
+
+------------------------------------------------------------------------
+
+```{=tex}
+\setcounter{tocdepth}{4}
+\tableofcontents
+\listoffigures
+\listoftables
+\newpage
+```
+
+\twocolumn
+
+# Setup
+
+```{r setup, message=FALSE}
+library(knitr)
+library(tidyverse)
+
+# set knitr chunk options
+knitr::opts_chunk$set(
+  out.width = "100%",
+  fig.align = "center"
+)
+
+# Set ggplot theme
+theme_set(
+  theme_classic() +
+    theme(
+      text = element_text(family = "mono", face = "bold")
+    )
+)
+```
+
+# Introduction
+
+This is a reference to Fig. @fig:galati-fig-2a (`markdown`)
+
+This is a reference to Fig. \@ref(fig:galati-fig-2a-knit) (`knitr::include_graphics()`)
+
+This is a reference to Fig. \@ref(fig:ggplot2-example) (`ggplot2::ggplot()`)
+
+This is a reference to Fig. @fig:galati-fig-2d (`markdown`)
+
+This is a reference to Fig. @fig:galati-fig-s4-21 (`markdown`)
+
+# Results
+
+## Comparison of internal analaysis to data from Galati, et al., 2020
+
+### Tumor mutation burden
+
+![Galati Fig. 2A (`Markdown`)](report--2021-01-15--mut-analysis-of-Galati-2020-data.assets/Galati-fig-2A.png){\#fig:galati-fig-2a}
+
+<!-- (ref:galati-fig-2a-knit) Tumor mutation frequency of *Pole*-mutant mouse tumors (Galati, et al., Fig. 2A)  -->
+(ref:galati-fig-2a-knit) Galati Fig. 2A (`knitr::include_graphics()`)
+
+```{r galati-fig-2a-knit, fig.cap="(ref:galati-fig-2a-knit)", out.width="100%"}
+include_graphics(path = "report--2021-01-15--mut-analysis-of-Galati-2020-data.assets/Galati-fig-2A.png")
+```
+
+(ref:ggplot2-example) Example of embedded `ggplot()` (`ggplot2::ggplot()`)
+
+```{r ggplot2-example, fig.cap="(ref:ggplot2-example)"}
+mtcars %>%
+  ggplot(aes(x = hp, y = mpg)) + 
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+
+
+### Variant allele frequencies for m4802
+
+![Galati Fig. 2D (`markdown`)](report--2021-01-15--mut-analysis-of-Galati-2020-data.assets/Galati-fig-2D.png){\#fig:galati-fig-2d}
+
+### Mutation signature analysis
+
+![Galati Fig. S4 - 21  (`markdown`)](report--2021-01-15--mut-analysis-of-Galati-2020-data.assets/galati-fig-s4--21-gi-lymphoma.png){\#fig:galati-fig-s4-21}
+
+# References

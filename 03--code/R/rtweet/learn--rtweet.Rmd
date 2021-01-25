@@ -1,0 +1,170 @@
+---
+title: "Learn package `rtweet`"
+author: "Leo Williams"
+date: "2021 Jan 17"
+output: 
+  bookdown::pdf_document2:
+  	pandoc_args:
+  	  - --pdf-engine=xelatex
+---
+
+```{r setup}
+library(tidyverse)
+library(rtweet)
+
+# set ggplot theme
+theme_set(
+	theme_classic() +
+	theme(
+		text = element_text(family = "Courier", face = "bold")
+	)
+)
+```
+
+# Vignette `intro`
+
+```{r}
+# vignette("intro", package = "rtweet")
+```
+
+## Searching tweets
+
+Search for 18,000 tweets containing the hashtag $\left (\frac{x^2sd}{\log(y)}\right )$ `#rstats`
+
+```{r}
+rt = search_tweets(q = "#rstats", 
+					n = 1000, 
+					include_rts = F, retryonratelimit = T)
+head(rt)
+```
+
+See how many tweets from each account
+
+```{r}
+counts = rt %>%
+	group_by(screen_name) %>%
+	count() %>%
+	arrange(desc(n))
+head(counts)
+```
+
+Plot the counts by account name
+
+```{r}
+counts %>%
+	filter(n > 30) %>%
+	ggplot(aes(
+		x = reorder(screen_name, n),
+		y = n
+	)) + 
+	geom_col(color = "black", fill = "gray") +
+	coord_flip() +
+	labs(
+		title = "\"#rstats\" tweets per account",
+		x = "Twitter name", 
+		y = "Tweets with \"#rstats\""
+	)
+```
+
+Preview users' data:
+
+```{r}
+users_data(tweets = rt)
+```
+
+Plot time series for tweet search results
+
+```{r}
+ts_plot(data = rt) +
+	labs(x = "Time", y = "Number of tweets")
+```
+
+Quickly visualize frequency of tweets over time using `ts_plot()`
+
+```{r}
+ts_plot(data = rt, by = "3 hours") +
+	labs(
+		title = "Frequency of #rstats Twitter statuses from past 9 days"
+	)
+```
+
+# Stream tweets
+
+# Get friends
+
+Get a list of all the accounts a particular user follows:
+
+```{r}
+# get user IDs of accounts followed by CNN
+cnn_fds = get_friends("cnn")
+
+# look up data on those accounts
+cnn_fds_data = lookup_users(cnn_fds$user_id)
+```
+
+```{r}
+leo_fds = get_friends(users = "Leo Williams") ; head(leo_fds)
+leo_fds_data = lookup_users(leo_fds$user_id) ; head(leo_fds_data)
+```
+
+# Get favorites
+
+```{r}
+jkr <- get_favorites("jk_rowling", n = 3000) ; head(jkr)
+```
+
+# Search users
+
+```{r}
+search_users("Trump", n = 1000) %>% head()
+```
+
+# Get trends
+
+Discover what's currently trending in New Orleans
+
+```{r}
+get_trends("new orleans") %>% head()
+```
+
+# Look up users
+
+lookup users by screen_name or user_id
+
+```{r}
+users <- c("KimKardashian", "justinbieber", "taylorswift13",
+           "espn", "JoelEmbiid", "cstonehoops", "KUHoops",
+           "upshotnyt", "fivethirtyeight", "hadleywickham",
+           "cnn", "foxnews", "msnbc", "maddow", "seanhannity",
+           "potus", "epa", "hillaryclinton", "realdonaldtrump",
+           "natesilver538", "ezraklein", "annecoulter")
+famous_tweeters <- lookup_users(users)
+```
+
+preview users data
+
+```{r}
+famous_tweeters %>% head()
+```
+
+extract most recent tweets data from the famous tweeters
+
+```{r}
+tweets_data(famous_tweeters) %>% head()
+```
+
+# Posting statuses
+
+Post a status
+
+```{r}
+# post_tweet("Testing out sending a tweet using the #rtweet package #rstats")
+```
+
+# Following users
+
+Follow users based on their screen name:
+
+```{r}
+# post_follow(user = "kearneymw")
+```

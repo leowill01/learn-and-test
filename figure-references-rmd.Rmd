@@ -1,0 +1,168 @@
+---
+title: "Summary Report"
+subtitle: "Analysis of Galati, et al., 2020 POLE-mutant Mouse Data"
+
+author:
+- Leo Williams:
+    institute: inst1
+    email: lwilli24@tulane.edu
+    correspondence: yes
+institute:
+- inst1: Pursell Lab, Dept. of Biochemistry & Molecular Biology, Tulane University School of Medicine, New Orleans, LA, USA
+
+date: |
+  | 2021 Jan 15
+  | Updated `r Sys.Date()`
+
+#  Updated: \today
+
+# added manually in tex block after YAML header
+toc: false
+link-citations: yes
+colorlinks: yes
+numbersections: yes
+
+header-includes:
+# wrap code blocks using the listings package (run with pandoc command that includes `--listings` command). looks cleaner. but makes highlighting mistakes, e.g. mistakes any '#' symbol as the start of a comment
+- \usepackage{xcolor}
+- \lstset{breaklines=true}
+- \lstset{language=[Motorola68k]Assembler}
+- \lstset{basicstyle=\small\ttfamily}
+- \lstset{extendedchars=true}
+- \lstset{tabsize=2}
+- \lstset{columns=fixed}
+- \lstset{showstringspaces=false}
+- \lstset{frame=trbl}
+- \lstset{frameround=tttt}
+- \lstset{framesep=4pt}
+- \lstset{numbers=left}
+- \lstset{numberstyle=\tiny\ttfamily}
+- \lstset{postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}}}
+- \lstset{commentstyle=\color{red!50!black}}
+- \lstset{keywordstyle=\color{blue!70!black}}
+- \lstset{stringstyle=\color{green!50!black}}
+# prevent floating figures (insert them where they are in the .md file)
+- \usepackage{float}
+- \let\origfigure\figure
+- \let\endorigfigure\endfigure
+- \renewenvironment{figure}[1][2] {\expandafter\origfigure\expandafter[H]}{\endorigfigure}
+
+output:
+  bookdown::pdf_document2:
+    pandoc_args:
+    - "--lua-filter=/Users/leo/Documents/my-documents/00--system/reference-files/scholarly-metadata.lua"
+    - "--lua-filter=/Users/leo/Documents/my-documents/00--system/reference-files/author-info-blocks.lua"
+    - "--citeproc"
+    - "--bibliography=/Users/leo/Documents/my-documents/00--system/reference-files/my-Zotero-library.bib"
+    - "--csl=/Users/leo/Documents/my-documents/00--system/reference-files/ieee.csl"
+    - "--listings"
+    - "--filter=/usr/local/Caskroom/miniconda/base/bin/pandoc-fignos"
+  # bookdown::html_notebook2:
+  #   pandoc_args:
+  #   - "--lua-filter=/Users/leo/Documents/my-documents/00--system/reference-files/scholarly-metadata.lua"
+  #   - "--lua-filter=/Users/leo/Documents/my-documents/00--system/reference-files/author-info-blocks.lua"
+  #   - "--citeproc"
+  #   - "--bibliography=/Users/leo/Documents/my-documents/00--system/reference-files/my-Zotero-library.bib"
+  #   - "--csl=/Users/leo/Documents/my-documents/00--system/reference-files/ieee.csl"
+  #   - "--listings"
+  #   - "--filter=/usr/local/Caskroom/miniconda/base/bin/pandoc-fignos"
+---
+
+------------------------------------------------------------------------
+
+```{=tex}
+\setcounter{tocdepth}{4}
+\tableofcontents
+\listoffigures
+\listoftables
+\newpage
+```
+\twocolumn
+
+# Setup
+
+```{r setup, message=FALSE}
+library(knitr)
+library(tidyverse)
+```
+
+# Introduction
+
+This R Markdown document is for testing the ability to simultaneously use `knitr`'s figure numbering system for code chunks alongside the `pandoc` filter `pandoc-fignos`. For more details, see: [Authoring Books with R Markdown - 2.4 Figures](https://bookdown.org/yihui/bookdown/figures.html) ; [Authoring Books with R Markdown - 2.2.4 Text References](https://bookdown.org/yihui/bookdown/markdown-extensions-by-bookdown.html#text-references) ; [`pandoc-xnos`](https://github.com/tomduck/pandoc-xnos) ; [`pandoc-fignos`](https://github.com/tomduck/pandoc-fignos)
+
+## Regular Markdown image figure
+
+## Figure from chunk output
+
+## Figure from `knitr::include_graphics()`
+
+Previously published data by Galati, et al., 2020[@2020GalatiCancersNovelPoleMutant] shows that POLE-exo mutant tumors in mice have much higher tumor mutation burden (TMB) in the range of $\approx80-300\text{mut/Mb}$ compared to mismatch repair-deficient (MMRD) tumors (Fig. \@ref(fig:galati-fig-2a)).
+
+<!-- (ref:galati-fig-2a) Tumor mutation frequency of *Pole*-mutant mouse tumors (Galati, et al., Fig. 2A) -->
+
+<!-- ```{r galati-fig-2a, echo=FALSE, fig.cap="(ref:galati-fig-2a)", out.width="100%", fig.align="center"} -->
+
+<!-- knitr::include_graphics(path = "report--2021-01-15--mut-analysis-of-Galati-2020-data.assets/Galati-fig-2A.png") -->
+
+<!-- ``` -->
+
+## fignos test
+
+![FIGNOS Tumor mutation frequency of *Pole*-mutant mouse tumors (Galati, et al., Fig. 2A)](report--2021-01-15--mut-analysis-of-Galati-2020-data.assets/Galati-fig-2A.png){#fig:galati-2a-fignos}
+
+This sentence refers to Fig. @fig:galati-2a-fignos (the figure directly above).
+
+<!-- The fuel efficiency of a car vs its horsepower is shown in Fig. @ref(fig:fignos-test-internal-img) -->
+
+The fuel efficiency of a car vs its horsepower is shown in Fig. @fig:fignos-test-internal-img
+
+<!-- (ref:fignos-test-internal-img) This is a figure generated in the document with R code. -->
+
+<!-- ```{r fignos-test-internal-img, fig.cap="(ref:fignos-test-internal-img)", fig.align="center"} -->
+
+<!-- (ref:fignos-test-internal-img) **Fuel efficiency** vs *horsepower* -->
+
+```{r fignos-test-internal-img, fig.cap="(ref:fignos-test-internal-img)"}
+mtcars %>%
+  ggplot(aes(
+    x = hp,
+    y = mpg
+  )) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_classic()
+```
+
+## after test
+
+In one mouse sample with multiple tumors (mouse 4802), three tumor fractions were isolated and used to reconstruct a phylogeny of the tumor evolution. The variant allele frequencies (VAF) of each fraction are shown in Fig. \@ref(fig:galati-fig-2d).
+
+(ref:galati-fig-2d) SNVs by VAF for each tumors fraction from mouse 4802 (Galati, et al., Fig. 2D)
+
+<!-- ```{r galati-fig-2d, echo=FALSE, fig.cap="(ref:galati-fig-2d)", out.width="100%", fig.align="center"} -->
+
+<!-- knitr::include_graphics(path = "report--2021-01-15--mut-analysis-of-Galati-2020-data.assets/Galati-fig-2D.png") -->
+
+<!-- ``` -->
+
+# Methods
+
+## NGS preprocessing
+
+POLE-exo-mutant mouse sequencing data were downloaded from the Sequence Read Archive (SRA) (accession ID: PRJNA659565) using `prefetch` and `fasterq-dump` from `sra-toolkit`. Adapters in the raw FASTQ files were marked with GATK `MarkIlluminaAdapters` and `SamToFastq`. Marked reads were mapped with `bwa mem`. Metadata from the uBAM was merged back with the mapped reads with `MergeBamAlignment`. Duplicate reads were marked with `MarkDuplicates`. Variant calling for somatic short variants was performed on the tumor samples using matched normal samples where available or genotype-matched normals otherwise. Variants were called with `varscan` and `Mutect2` and post-processed with their respective filter tools.
+
+## Mutation analysis
+
+Analysis of sample variants was then performed with an in-house pipeline to obtain TMB and VAF distributions.
+
+# Results
+
+## NGS preprocessing
+
+Some of the retrieved sample data was corrupted due to missing data in some FASTQ files. Only samples with intact data were used for the rest of the analysis.
+
+## Mutation analysis
+
+# Discussion
+
+# References
