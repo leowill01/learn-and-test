@@ -17,7 +17,7 @@ theme_set(
 
 Getting help about objects in a package
 
-```{rm eval=F}
+```{r eval=F}
 # show documentation for pkg
 library(help = "base")
 
@@ -33,9 +33,7 @@ search()
 help(package = "base")
 ```
 
-# MODELING
-
-## DATA
+# DATA
 
 Use the iris dataset
 
@@ -44,7 +42,27 @@ Use the iris dataset
 t_iris = as_tibble(iris)
 ```
 
-## PLOT
+# INSPECT
+
+```{r}
+
+```
+
+# PLOT
+
+```{r base-plot}
+# make base plot
+plot(1:10, (1:10)^2)
+# add a straight line ("a-b line" for yint and slope)
+abline(20, 5)
+# add a curved line using a function or equally a call to an expression (which is a function?)
+fun1 = function(x) x^2
+curve(expr = fun1, add = T)
+expr1 = expression()
+# add linear model as abline using yint and slope
+
+```
+
 
 ```{r plot}
 t_iris %>%
@@ -53,7 +71,7 @@ t_iris %>%
 	geom_smooth(method = "lm")
 ```
 
-## MODEL
+# MODEL
 
 ```{r model}
 # model petal length by sepal length
@@ -61,6 +79,8 @@ iris_mod_lin = lm(formula = Petal.Length ~ Sepal.Length, data = t_iris)
 # summarize the model
 iris_mod_lin_summ = summary(iris_mod_lin) ; iris_mod_lin_summ
 ```
+
+## PREDICT
 
 Predict new values from model
 
@@ -70,7 +90,6 @@ t_iris$Petal.Length.pred = predict(iris_mod_lin)
 
 
 ```
-
 
 ```{r, eval=F}
 rss_tab = estimate$measures$rss %>%
@@ -96,7 +115,10 @@ rss_tab_pred %>%
 	# geom_line(aes(y = pred), color = "red")
 	# stat_function(fun = fun_pred) +
 	stat_smooth(method = "lm", formula = y ~ I(1/x), se = T)
+```
 
+
+```{r, eval=F}
 # get derivative of best fit line
 D(expr = expression(-92241 + 1386191*(1/x)), name = "x")
 fun_deriv = function(x) eval(D(expr = expression(-92241 + 1386191*(1/x)), name = "x"))
@@ -104,7 +126,14 @@ uniroot(f = fun_deriv, interval = c(1, 10))
 ```
 
 
+
 # math expressions, functions, and evaluations
+
+See: [Advanded R - Expressions](http://adv-r.had.co.nz/Expressions.html) ;
+
+To do:
+
+-   [ ] `quote()` : returns an expression
 
 relevant R functions - `call()` - `expression()` - `eval()` - `function()`
 
