@@ -24,7 +24,7 @@ theme_set(
 # Vignette `intro`
 
 ```{r}
-# vignette("intro", package = "rtweet")
+vignette("intro", package = "rtweet")
 ```
 
 ## Searching tweets
