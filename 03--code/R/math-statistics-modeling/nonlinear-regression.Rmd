@@ -1,0 +1,109 @@
+---
+title: "Practice: Intuitive Biostatistics"
+subtitle: "Nonlinear Regression"
+---
+
+# SETUP
+
+```{r setup, message=F}
+library(tidyverse)
+library(extrafont)
+library(drc)
+library(nlme)
+
+theme_set(
+	theme_classic() +
+	theme(
+		text = element_text(family = "Anonymous Pro", face = "bold", size = 12)
+	)
+)
+```
+
+# CHAPTER 36: NONLINEAR REGRESSION
+
+## GET DATA
+
+Sample data: Bladder muscle relaxation data for one young rat
+
+```{r nls-data}
+dat_rat = tibble(
+	log_norepinephrine_M = c(
+		-8,-7.5,-7,-6.5,-6,-5.5,-5,-4.5,-4,-3.5,-3
+	), 
+	pct_relaxation = c(
+		2.6,10.5,15.8,21.1,36.8,57.9,73.7,89.5,94.7,100,100
+	)
+)
+glimpse(dat_rat)
+```
+
+## VISUALIZE
+
+```{r}
+dat_rat %>%
+	ggplot(aes(
+		x = log_norepinephrine_M, 
+		y = pct_relaxation
+	)) + 
+	geom_point() +
+	labs(
+		title = "Effect of norepinephrine on bladder muscle relaxation", 
+		x = "Norepinephrine concentration (log)",
+		y = "% Muscle relaxation"
+	)
+```
+
+# MODEL
+
+The model used is a standard model for a drug dose-response relationship:
+
+$$
+Y = Bottom + \frac{Top - Bottom}{1 + 10^{(LogEC_50 - X) \cdot HillSlope}} \\
+Y = A + \frac{B - A}{1 + 10^{(C - X) \cdot D}}
+$$
+
+Model this nonlinear relationship using the sample data, where:
+- a = Bottom
+- b = Top
+- c = log(EC_50)
+- d = HillSlope
+
+
+```{r model}
+# define formula using 
+# mod_nls = nls(formula = pct_relaxation ~ Bottom + (Top - Bottom)/(1 + 10^((LogEC_50 - X) * HillSlope)), 
+
+# mod_nls = nls(formula = pct_relaxation ~ bottom + (top - bottom)/(1 + 10^((logEC50 - log_norepinephrine_M) * HillSlope)),
+# 			  data = dat_rat)
+
+# mod_nls = selfStart(model = )
+
+# mod_nls = drm(formula = pct_relaxation ~ bottom + (top - bottom)/(1 + 10^((logEC50 - log_norepinephrine_M) * HillSlope)), data = dat_rat, fct = L.4())
+
+# mod_nls = nls(formula = pct_relaxation ~ bottom + (top - bottom)/(1 + 10^((logEC50 - log_norepinephrine_M) * HillSlope)),
+			  # data = dat_rat, start = SSlogis())
+			  
+mod_ep_relax = nls(formula = pct_relaxation ~ b1 + (b5)/(1 + 10^((b6)*b4)), data = dat_rat, start = list(b1 = 0, b5 = 0.5, b6 = 0.5, b4 = 1))
+
+mod_ep_relax = drc
+
+```
+
+
+Test `nls()` from  https://www.r-bloggers.com/2016/02/first-steps-with-non-linear-regression-in-r/
+```{r test-nls}
+#simulate some data
+set.seed(20160227)
+x <- seq(0,50,1)
+y <- ((runif(1,10,20)*x)/(runif(1,0,10) + x)) + rnorm(51,0,1)
+test_dat = tibble(x, y)
+glimpse(test_dat)
+#for simple models nls find good starting values for the parameters even if it throw a warning
+m <- nls(y ~ a*x/(b + x), data = test_dat)
+#get some estimation of goodness of fit
+cor(y,predict(m))
+# [1] 0.9496598
+#plot
+plot(x,y)
+lines(x,predict(m), lty = 2, col = "red", lwd = 3)
+```
