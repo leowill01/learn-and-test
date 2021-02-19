@@ -1,0 +1,57 @@
+---
+title: "Testing: Functions, expressions, calls, eval"
+author: "Leo Williams"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+---
+
+
+# Eval, expressions, functions, calls, quote
+
+## EVAL examples
+
+```{r, eval=FALSE}
+?eval
+```
+
+```{r}
+2^2^3
+eval(2^2^3)
+```
+
+```{r}
+mex = expression(2^2^3)
+mex
+1 + eval(mex)
+```
+
+```{r}
+eval(
+	{xx = pi ; xx^2}
+)
+
+xx
+```
+
+```{r}
+mean(1:10) # *
+expression(mean(1:10))
+call("mean", (1:10)) # @@
+do.call(what = "mean",
+		args = list(c(1:10))) # *
+eval(expression(mean(1:10))) # *
+eval(call("mean", (1:10))) # *
+eval(expression(quote(mean(1:10)))) # @@
+```
+
+```{r}
+
+```
+
+
+# REFERENCES
+
+- https://stackoverflow.com/questions/20355547/expression-vs-call
+
