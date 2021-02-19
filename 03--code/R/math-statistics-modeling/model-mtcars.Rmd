@@ -1,0 +1,50 @@
+---
+title: "Test: Modeling the `mtcars` Dataset"
+output:
+  bookdown::html_document2
+  # bookdown::html_document2:
+  #   toc: yes
+  #   toc_float: yes
+---
+
+
+```{r setup, message=F}
+library(tidyverse)
+```
+
+```{r}
+mtcars = mtcars %>%
+	as_tibble()
+mtcars
+```
+
+```{r}
+mtcars %>%
+	select(-vs, -am, -gear, -carb, -cyl) %>%
+	pairs()
+```
+
+```{r}
+mtcars %>%
+	ggplot(aes(
+		x = disp, 
+		y = mpg
+	)) +
+	geom_point() + 
+	geom_smooth(method = "lm", color = "black", size = 0.5, alpha = 0.2, se = F) +
+	geom_smooth(method = "lm", formula = y ~ I(1/x), size = 0.5, color = "red", alpha = 0.2, se = F) +
+	geom_smooth(method = "lm", formula = y ~ poly(x, 5), size = 0.5, color = "blue", alpha = 0.2, se = F) +
+	geom_smooth(method = "lm", formula = y ~ poly(x, 3), size = 0.5, color = "darkgreen", alpha = 0.2, se = F)
+```
+
+```{r}
+mod_lin = lm(formula = mpg ~ disp, data = mtcars, method = "lm")
+mod_inv = lm(formula = mpg ~ I(1/disp), data = mtcars)
+mod_poly5 = lm(formula = mpg ~ poly(disp, 5), data = mtcars)
+mod_poly3 = lm(formula = mpg ~ poly(disp, 3), data = mtcars)
+summary(mod_lin)
+summary(mod_inv)
+summary(mod_poly5)
+summary(mod_poly3)
+```
+
