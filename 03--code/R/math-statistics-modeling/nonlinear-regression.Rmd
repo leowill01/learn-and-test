@@ -10,6 +10,7 @@ library(tidyverse)
 library(extrafont)
 library(drc)
 library(nlme)
+library(ggpmisc)
 
 theme_set(
 	theme_classic() +
@@ -55,42 +56,14 @@ dat_rat %>%
 
 # MODEL
 
-The model used is a standard model for a drug dose-response relationship:
+## Test nls
+
+Test `nls()` from <https://www.r-bloggers.com/2016/02/first-steps-with-non-linear-regression-in-r/> using the following equation:
 
 $$
-Y = Bottom + \frac{Top - Bottom}{1 + 10^{(LogEC_50 - X) \cdot HillSlope}} \\
-Y = A + \frac{B - A}{1 + 10^{(C - X) \cdot D}}
+y = \frac{a \cdot x}{b + x}
 $$
 
-Model this nonlinear relationship using the sample data, where:
-- a = Bottom
-- b = Top
-- c = log(EC_50)
-- d = HillSlope
-
-
-```{r model}
-# define formula using 
-# mod_nls = nls(formula = pct_relaxation ~ Bottom + (Top - Bottom)/(1 + 10^((LogEC_50 - X) * HillSlope)), 
-
-# mod_nls = nls(formula = pct_relaxation ~ bottom + (top - bottom)/(1 + 10^((logEC50 - log_norepinephrine_M) * HillSlope)),
-# 			  data = dat_rat)
-
-# mod_nls = selfStart(model = )
-
-# mod_nls = drm(formula = pct_relaxation ~ bottom + (top - bottom)/(1 + 10^((logEC50 - log_norepinephrine_M) * HillSlope)), data = dat_rat, fct = L.4())
-
-# mod_nls = nls(formula = pct_relaxation ~ bottom + (top - bottom)/(1 + 10^((logEC50 - log_norepinephrine_M) * HillSlope)),
-			  # data = dat_rat, start = SSlogis())
-			  
-mod_ep_relax = nls(formula = pct_relaxation ~ b1 + (b5)/(1 + 10^((b6)*b4)), data = dat_rat, start = list(b1 = 0, b5 = 0.5, b6 = 0.5, b4 = 1))
-
-mod_ep_relax = drc
-
-```
-
-
-Test `nls()` from  https://www.r-bloggers.com/2016/02/first-steps-with-non-linear-regression-in-r/
 ```{r test-nls}
 #simulate some data
 set.seed(20160227)
@@ -100,10 +73,169 @@ test_dat = tibble(x, y)
 glimpse(test_dat)
 #for simple models nls find good starting values for the parameters even if it throw a warning
 m <- nls(y ~ a*x/(b + x), data = test_dat)
+# summarize model
+summary(m)
 #get some estimation of goodness of fit
 cor(y,predict(m))
 # [1] 0.9496598
 #plot
 plot(x,y)
 lines(x,predict(m), lty = 2, col = "red", lwd = 3)
+```
+
+
+## Dose-response curve
+
+The model used is a standard model for a drug dose-response relationship:
+
+$$
+Y = Bottom + \frac{Top - Bottom}{1 + 10^{(LogEC_50 - X) \cdot HillSlope}} \\
+Y = A + \frac{B - A}{1 + 10^{(C - X) \cdot D}}
+$$
+
+Model this nonlinear relationship using the sample data, where: - a = Bottom - b = Top - c = log(EC_50) - d = HillSlope
+
+```{r model}
+# mod_dr = nls(formula = y ~ b + (t - b)/(1 + 10^((e - x) * s)), 
+# b=0
+mod_dr = nls(formula = pct_relaxation ~ 0 + (t - 0)/(1 + 10^((e - log_norepinephrine_M) * s)),
+#  = nls(formula = pct_relaxation ~ t/(1 + 10^((e - log_norepinephrine_M) * s)),
+			   data = dat_rat, 
+			   start = list(
+			   	t = 100, 
+			   	e = -5.5,
+			   	s = 0.5
+			   ))
+summary(mod_dr)
+dat_rat$preds = predict(mod_dr)
+```
+
+plot the model
+
+```{r}
+dat_rat %>%
+	ggplot(aes(
+		x = log_norepinephrine_M, 
+		y = pct_relaxation
+	)) + 
+	geom_point() +
+	geom_point(aes(y = preds), color = "red") +
+	geom_smooth(method = 'nls', 
+				method.args = list(
+					formula = y ~ 0 + (t - 0)/(1 + 10^((e - x) * s)),
+			   # data = dat_rat, 
+			   start = list(
+			   	t = 100, 
+			   	e = -5.5,
+			   	s = 0.5
+			   )), 
+				se = F, size = 0.5, linetype = "dashed") +
+	labs(
+		title = "Effect of norepinephrine on bladder muscle relaxation", 
+		x = "Norepinephrine concentration (log)",
+		y = "% Muscle relaxation"
+	) 
+```
+
+## Michaelis-Menten
+
+Michaelis-Menten equation:
+
+$$
+Y = \frac{V_{max} \cdot X}{K_m + X}
+$$
+
+Which equates to the function:
+
+$$
+f(x, \beta) = \frac{\beta_1 x}{\beta_2 + x}
+$$
+
+It's nonlinear because it cannot be expressed as a linear combination of the two $\beta$.
+
+Load some sample MM data from the blog post [Plotting and fitting enzymology data... \| R for Biochemists](https://rforbiochemists.blogspot.com/2015/05/plotting-and-fitting-enzymology-data.html)
+
+```{r sample-mm-data}
+# As a biochemist, one of the first data types we play with is enzymology data. 
+# Here is an example of some enzyme simple kinetic data
+# Eight values for substrate concentration with corresponding enzyme velocities. 
+# The goals are to plot the data, in different formats, and also, find the best fit values of Km and Vmax
+# all of this is complete in base R, so no packages should be needed
+
+# Entered as vectors 
+mm_data = tibble(
+	S = c(0,1,2,5,8,12,30,50),
+	V = c(0,11.1,25.4,44.8,54.5,58.2,72.0,60.1)
+)
+glimpse(mm_data)
+```
+
+Plot the sample data:
+
+```{r plot-mm-data}
+mm_data %>%
+	ggplot(aes(
+		x = S, 
+		y = V
+	)) +
+	geom_point() +
+	geom_smooth(size = 0.5, alpha = 0.1, method = "lm", se = F) +
+	labs(
+		title = "Michaelis-Menten Kinetics",
+		x = "Substrate Concentration", 
+		y = "Enzyme Velocity"
+	)
+```
+
+Try and model a michaelis menten curve to fit the enzyme data:
+
+```{r nls-mm}
+mm_form <- V ~ (Vmax*S)/(Km + S)
+mod_mm = nls(formula = mm_form, data = mm_data, start = list(Vmax = 70, Km = 5))
+summary(mod_mm)
+confint(mod_mm)
+mod_mm_pred = as_tibble(predict(object = mod_mm, interval = "confidence", newdata = mm_data$S, level = 0.95))
+mod_mm_pred
+profile_mod_mm = profile(mod_mm)
+profile_mod_mm
+plot(profile_mod_mm)
+```
+
+Predict new values with `predict()`:
+
+```{r mm-predict}
+mm_data$predict = predict(mod_mm)
+glimpse(mm_data)
+```
+
+Plot the model fit onto the raw data:
+
+```{r}
+# plot(mm_data$S, mm_data$V)
+# plot(mod_mm, log = '', pch = 17, main = "Fitted MM curve")
+# plot(mod_mm)
+```
+
+```{r plot-mm-fit}
+mm_data %>%
+	ggplot(aes(
+		x = S, 
+		y = V
+	)) +
+	geom_point() +
+	geom_point(aes(y = predict), color = "red") +
+	# add incorrect linear regression line for reference
+	# geom_smooth(method = "lm", size = 0.5, se = F, color = "black") +
+	geom_smooth(method = 'nls', 
+				method.args = list(
+					formula = y ~ (a*x)/(b + x), 
+					start = list(a = 70, b = 5)
+				), 
+				se = F, size = 0.5, linetype = "dashed") +
+	labs(
+		title = "Michaelis-Menten NLS Fit", 
+		y = "Enzyme Velocity (V)", 
+		x = "Substrate Concentration (S)"
+	)
+	# geom_ribbon(data = mod_mm_pred, aes(x = S, ))
 ```
