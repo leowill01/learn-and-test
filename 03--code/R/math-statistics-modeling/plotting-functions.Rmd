@@ -1,0 +1,80 @@
+---
+title: "Plotting Models as Manual Functions"
+author: "Leo Williams"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, message=F}
+library(tidyverse)
+library(ggpmisc)
+```
+
+```{r gen-data}
+x = 1:100
+y = 1/x + rnorm(n = length(x), sd = 0.1)
+
+df = tibble(
+	x, y
+)
+df
+```
+
+```{r plot}
+df %>%
+	ggplot(aes(x = x, y = y)) + 
+	geom_point() +
+	geom_smooth(method = "lm", formula = y ~ I(1/x))
+```
+
+```{r model}
+mod_inv = lm(formula = y ~ I(1/x), data = df)
+summary(mod_inv)
+
+# add prediction data to df
+df$preds = predict(object = mod_inv)
+```
+
+```{r make-function-from-mod-fit}
+mod_fun <- function(x) {
+	# set param estimates
+	b0 = mod_inv$coefficients[1]
+	b1 = mod_inv$coefficients[2]
+	
+	# make function
+	b0 + b1*(1/x)
+}
+```
+
+
+```{r plot-mod-func}
+formula = y ~ I(1/x)
+
+df %>%
+	ggplot(aes(x = x, y = y)) + 
+	geom_point() +
+	geom_smooth(method = "lm", 
+				formula = formula) +
+	# geom_point(aes(y = preds), color = "red", size = 0.5) +
+	stat_function(mapping = aes(x = x), 
+				  fun = mod_fun, 
+				  color = "red", size = 1, linetype = "dotted") +
+	# add model results to plot
+	stat_poly_eq(
+		aes(label = paste0(
+			stat(eq.label), "*\" with \"*",
+			stat(p.value.label), "*\" and \"*",
+			stat(rr.label)
+		)),
+		formula = formula,
+		# geom = "text",
+		geom = "label",
+		parse = T,
+		label.x = "middle", label.y = "top"
+	)
+```
+
+~~FIXME: the function from model estimates and the model fit itself~~ I forgot to add the y-int param estimate to the function
+
