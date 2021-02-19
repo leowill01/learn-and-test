@@ -1,5 +1,5 @@
 ---
-title: 'Learn R packge TCGAWorkflow'
+title: 'Learn: Package `TCGAWorkflow`'
 author: 'Leo Williams'
 output: html_notebook
 ---
@@ -11,6 +11,16 @@ This notebook is for learning the R Bioconductor package `TCGAWorkflow`. It foll
 Data used is from the package `TCGAWorkflowData`.
 
 # SETUP
+
+Install packages if needed:
+```{r install-packages}
+if (FALSE) {
+	BiocManager::install(c(
+		"TCGAWorkflow"
+	))
+}
+```
+
 
 Load packages and set options:
 
