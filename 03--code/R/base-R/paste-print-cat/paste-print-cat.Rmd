@@ -1,0 +1,29 @@
+---
+title: "Testing escape characters with `cat()`, `print()`, and `paste()`"
+# output: html_notebook
+output:
+  html_notebook:
+    code_folding: hide
+---
+
+
+```{r}
+paste0("hello\nworld")
+```
+
+```{r}
+print(paste0("hello\nworld"))
+```
+
+```{r}
+print(paste0("hello","\n","world"))
+```
+
+```{r}
+cat(paste0("hello","\n","world"))
+```
+
+```{r}
+cat(print(paste0("hello","\n","world")))
+```
+
