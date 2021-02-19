@@ -1,0 +1,141 @@
+---
+title: "Worked Examples form Intuitive Biostatistics, 4th ed."
+# subtitle: "Subtitle"
+
+author:
+- Leo Williams:
+    institute: [inst1]
+    # equal_contributor: yes
+    correspondence: yes
+    email: name@domain.com
+institute:
+- inst1: IGERT Bioinnovation Program, Tulane University School of Science & Engineering, New Orleans, LA, USA
+# - inst2: Pursell Lab
+
+date: |
+  | Created: 2021 02_Feb 12
+  | Updated: `r format(Sys.Date(), "%Y %m_%b %d")`
+#  | Updated: \today
+
+# editor_options:
+#   markdown:
+#     canonical: yes
+# https://rstudio.github.io/visual-markdown-editing/#/markdown?id=canonical-mode
+
+abstract: |
+  | **Introduction:** Write the introduction here.
+  | **Methods:** Write the methods here.
+  | **Results:** Write the results here.
+  | **Conclusions:** Write the conclusions here.
+
+header-includes:
+# wrap code blocks using the listings package (run with pandoc command that includes `--listings` command). looks cleaner. but makes highlighting mistakes, e.g. mistakes any '#' symbol as the start of a comment
+- \usepackage{xcolor}
+- \lstset{breaklines=true}
+- \lstset{language=[Motorola68k]Assembler}
+- \lstset{basicstyle=\small\ttfamily}
+- \lstset{extendedchars=true}
+- \lstset{tabsize=2}
+- \lstset{columns=fixed}
+- \lstset{showstringspaces=false}
+- \lstset{frame=trbl}
+- \lstset{frameround=tttt}
+- \lstset{framesep=4pt}
+- \lstset{numbers=left}
+- \lstset{numberstyle=\tiny\ttfamily}
+- \lstset{postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}}}
+- \lstset{commentstyle=\color{red!50!black}}
+- \lstset{keywordstyle=\color{blue!70!black}}
+- \lstset{stringstyle=\color{green!50!black}}
+
+# prevent floating figures (insert them where they are in the .md file)
+- \usepackage{float}
+- \let\origfigure\figure
+- \let\endorigfigure\endfigure
+- \renewenvironment{figure}[1][2] {\expandafter\origfigure\expandafter[H]}{\endorigfigure}
+
+# OUPUT FORMATS ################################
+# HTML output --------------------------------
+output:
+  # html_notebook:
+  bookdown::html_document2:
+    toc: yes
+    toc_float: yes
+    link-citations: yes
+    colorlinks: yes
+    number_sections: yes
+    code_folding: hide
+    theme: readable # default cerulean journal flatly darkly readable spacelab united cosmo lumen paper sandstone simplex yeti       
+    pandoc_args:
+    - "--lua-filter=/Users/leo/Documents/my-documents/00--system/reference-files/scholarly-metadata.lua"
+    - "--lua-filter=/Users/leo/Documents/my-documents/00--system/reference-files/author-info-blocks.lua"
+    - "--citeproc"
+    - "--bibliography=/Users/leo/Documents/my-documents/00--system/reference-files/my-Zotero-library.bib"
+    - "--csl=/Users/leo/Documents/my-documents/00--system/reference-files/ieee.csl"
+    - "--listings"
+    - "--filter=/usr/local/Caskroom/miniconda/base/bin/pandoc-fignos"
+    # pandoc_args: [
+    #   "--citeproc",
+    #   "--filter", "/usr/local/Caskroom/miniconda/base/bin/pandoc-fignos"
+    # ] # https://bookdown.org/yihui/rmarkdown/html-document.html#pandoc-arguments
+
+# # PDF output --------------------------------
+# # added manually in tex block after YAML header
+# toc: false
+# link-citations: yes
+# colorlinks: yes
+# numbersections: yes
+# 
+# output:
+#   bookdown::pdf_document2:
+#     pandoc_args:
+#     - "--lua-filter=/Users/leo/Documents/my-documents/00--system/reference-files/scholarly-metadata.lua"
+#     - "--lua-filter=/Users/leo/Documents/my-documents/00--system/reference-files/author-info-blocks.lua"
+#     - "--citeproc"
+#     - "--bibliography=/Users/leo/Documents/my-documents/00--system/reference-files/my-Zotero-library.bib"
+#     - "--csl=/Users/leo/Documents/my-documents/00--system/reference-files/ieee.csl"
+#     - "--listings"
+#     - "--filter=/usr/local/Caskroom/miniconda/base/bin/pandoc-fignos"
+#     # pandoc_args: [
+#     #   "--citeproc",
+#     #   "--filter", "/usr/local/Caskroom/miniconda/base/bin/pandoc-fignos"
+#     # ] # https://bookdown.org/yihui/rmarkdown/html-document.html#pandoc-arguments
+---
+
+# INTRODUCTION
+
+
+
+# SETUP
+
+```{r setup, message=F}
+library(tidyverse)
+library(extrafont)
+
+theme_set(
+  theme_classic() +
+  theme(
+    text = element_text(family = "Helvetica Neue", face = "bold")
+  )
+)
+```
+
+# CH. 46: CAPSTONE EXAMPLE
+
+Load & view data for Table 46.1:
+```{r}
+dat_IC50 = tibble(
+  `TMQ (nM)` = c(5.5,12,19,47),
+  `MTX (nM)` = c(0.83,1.1,1.9,5.8)
+)
+
+dat_IC50 %>%
+  ggplot(aes(
+    x = `TMQ (nM)`, 
+    y = `MTX (nM)`
+  )) +
+  geom_point()
+```
+
+
+
