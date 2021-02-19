@@ -1,0 +1,70 @@
+---
+title: "Learning: Calculus methods in R"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+    code_folding: hide
+  # bookdown::html_document2:
+  #   code_folding: hide
+  #   toc: yes
+  #   toc_float: yes
+---
+
+# TO DO
+
+- [ ] Follow BOTH examples in [this SO post](https://stackoverflow.com/questions/14847489/when-a-function-is-equal-to-a-certain-value)
+- [ ] [r bloggers post](https://www.r-bloggers.com/2015/10/finding-multiple-roots-of-univariate-functions-in-r/)
+- [ ] [introduction to inflection package](https://cran.r-project.org/web/packages/inflection/vignettes/inflection.html)
+	- [ ] [Find inflection points: Mission Impossible!](https://cran.r-project.org/web/packages/inflection/vignettes/inflectionMissionImpossible.html)
+
+# SETUP
+
+```{r setup, message=F}
+library(tidyverse)
+library(rootSolve)
+```
+
+# Derivatives
+
+Find the derivative of the sin function
+
+```{r}
+sin_exp = expression(sin(x))
+d_sin_exp = D(sin_exp, "x")
+d_sin_exp
+class(d_sin_exp)
+mode(d_sin_exp)
+```
+
+# SORT
+
+```{r}
+x = 1:10
+y = sin(x)
+df_sin = tibble(x, y)
+df_sin
+
+# df_sinD = df_sin %>%
+# 	mutate(y = D(expr = expression(sin(x)), name = "x"))
+# df_sinD
+```
+
+```{r plot-sin}
+df_sin %>%
+	ggplot(aes(x = x, y = y)) + 
+	geom_point() +
+	geom_function(fun = sin) +
+	geom_hline(yintercept = 0) +
+	geom_vline(xintercept = 0)
+```
+
+```{r find-zeroes-sin}
+# uniroot(f = sin, interval = c(1, 10))
+roots = uniroot.all(f = sin, interval = c(0,10), )
+
+```
+
+# REFERENCES
+
+- https://stackoverflow.com/questions/14847489/when-a-function-is-equal-to-a-certain-value
