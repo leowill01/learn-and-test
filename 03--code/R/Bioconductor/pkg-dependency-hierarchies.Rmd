@@ -1,0 +1,62 @@
+```{r}
+library(qrage)
+library(tidyverse)
+library(extrafont)
+```
+
+```{r test-qrage}
+data(links)
+links
+```
+
+```{r}
+qrage(links, width = 800, height = 800)
+```
+
+```{r}
+bioc_depends = read_tsv(file = "/Users/leo/Documents/my-documents/02--work-and-career/02--projects--work-and-career/04--learn-and-test/02--data/bioconductor-pkg-depends.tsv")
+bioc_depends
+```
+
+```{r}
+bioc_depends_counts = bioc_depends %>%
+	count(target) %>%
+	arrange(desc(n)) %>%
+	right_join(
+		y = bioc_depends, 
+		by = "target"
+	) %>%
+	select(-value) %>%
+	rename(value = n) %>%
+	relocate(value, .after = last_col())
+bioc_depends_counts
+```
+
+```{r}
+bioc_depends_counts %>%
+	count(target) %>%
+	arrange(desc(n)) %>%
+	# group_by(target) %>%
+	ggplot(aes(
+		x = reorder(target, n),
+		y = n
+	)) +
+	geom_col() +
+	coord_flip() +
+	scale_y_continuous(breaks = 1:10) +
+	labs(
+		title = "Dependency Hierarchy from Package `MutationalPatterns`",
+		x = "Package Name",
+		y = "Dependent Packages"
+	) +
+	theme_classic() +
+	theme(
+		text = element_text(family = "Roboto", face = "bold")
+	)
+```
+
+
+```{r}
+qrage(as.data.frame(bioc_depends_counts), width = 1000, height = 800, distance = 15000)
+```
+
