@@ -1,7 +1,7 @@
 ---
 title: 'Learn: Package `TCGAWorkflow`'
 author: 'Leo Williams'
-output: html_notebook
+# output: html_notebook
 ---
 
 # ABOUT
@@ -10,9 +10,16 @@ This notebook is for learning the R Bioconductor package `TCGAWorkflow`. It foll
 
 Data used is from the package `TCGAWorkflowData`.
 
+Other resources:
+
+-   Workshop -[TCGA data analysis](http://rstudio-pubs-static.s3.amazonaws.com/523337_fb0f67ec236b413486f9852a8263809e.html#43_mutation)
+
+-   
+
 # SETUP
 
 Install packages if needed:
+
 ```{r install-packages}
 if (FALSE) {
 	BiocManager::install(c(
@@ -20,7 +27,6 @@ if (FALSE) {
 	))
 }
 ```
-
 
 Load packages and set options:
 
@@ -103,6 +109,7 @@ exp.gbm.lgg <- SummarizedExperiment::cbind(exp.lgg, exp.gbm)
 # TEST
 
 Query GDC for annotated Varscan VCFs for CRC and UCEC tumors:
+
 ```{r query-CRC-UCEC}
 # FIXME: does not return case ID
 query_snv_crc_ucec = GDCquery(project = c("TCGA-COAD", 
@@ -114,7 +121,6 @@ query_snv_crc_ucec = GDCquery(project = c("TCGA-COAD",
 							  data.format = "VCF")
 
 ```
-
 
 # TO-DO
 
