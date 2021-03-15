@@ -1,12 +1,7 @@
 ---
 title: 'Learn: vcfR'
 subtitle: 'From: vcfR Documentation'
-output:
-  html_notebook:
-    toc: true
-    toc_float: true
-  pdf_document:
-    toc: true
+output: html_notebook
 ---
 
 These tutorials are based on the official `vcfR` tutorials from the [vcfR documentation](https://knausb.github.io/vcfR_documentation/index.html)
@@ -42,7 +37,7 @@ gff_file = system.file("extdata", "pinf_sc50.gff", package = pkg)
 Read in the VCF file:
 
 ```{r}
-vcf = read.vcfR(vcf_file, verbose=F)
+vcf = read.vcfR(vcf_file, verbose = F)
 ```
 
 The file is stored as a vcfR object (S4 class) with 3 slots, one each for metadata, fixed data, and genotype data. 
@@ -309,7 +304,8 @@ vcf_field_names(vcfR_test, tag = "FORMAT")
 Make a tidy vcfR object. This is a list containing 3 elements just like a vcfR object: `fix`, `gt`, and `meta`. Each element is a tibble. More info can be found with `?vcfR2tidy`.
 
 ```{r}
-Z = vcfR2tidy(vcfR_test, format_fields = c("GT", "DP"))
+# Z = vcfR2tidy(vcfR_test, format_fields = c("GT", "DP"))
+Z = vcfR2tidy(vcfR_test)
 names(Z)
 
 Z$meta
